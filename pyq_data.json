@@ -1,0 +1,77 @@
+[
+  {
+    "branch": "CSE",
+    "subject": "Data Structures",
+    "year": 2021,
+    "questionType": "MCQ",
+    "marks": 1,
+    "questionText": "Consider the following C program. What is the output?\\n\\n\\[\\n\\text{int main() { int x = 5; printf(\\\"%d\\\", ++x); return 0; }}\n\\]",
+    "options": [
+      { "id": "a", "text": "5" },
+      { "id": "b", "text": "6" },
+      { "id": "c", "text": "7" },
+      { "id": "d", "text": "Compile Error" }
+    ],
+    "correctAnswer": "b",
+    "explanation": "The pre-increment operator ++x increments the value of x before using it in printf. So x becomes 6 and 6 is printed."
+  },
+  {
+    "branch": "CSE",
+    "subject": "Algorithms",
+    "year": 2021,
+    "questionType": "MSQ",
+    "marks": 2,
+    "questionText": "Which of the following sorting algorithms have a worst-case time complexity of $O(n \\log n)$?",
+    "options": [
+      { "id": "a", "text": "Merge Sort" },
+      { "id": "b", "text": "Quick Sort" },
+      { "id": "c", "text": "Heap Sort" },
+      { "id": "d", "text": "Bubble Sort" }
+    ],
+    "correctAnswer": ["a", "c"],
+    "explanation": "Merge Sort and Heap Sort both have guaranteed $O(n \\log n)$ worst-case complexity. Quick Sort has $O(n^2)$ worst-case."
+  },
+  {
+    "branch": "CSE",
+    "subject": "Operating Systems",
+    "year": 2020,
+    "questionType": "NAT",
+    "marks": 1,
+    "questionText": "Consider a system with $n$ processes sharing $m$ identical resources. What is the minimum value of $m$ required to guarantee no deadlock if each process needs at most $k$ resources?",
+    "options": [],
+    "correctAnswer": "n*(k-1)+1",
+    "explanation": "By Banker's safety condition, to guarantee no deadlock, total resources must be at least $n(k-1) + 1$."
+  },
+  {
+    "branch": "ECE",
+    "subject": "Signals and Systems",
+    "year": 2021,
+    "questionType": "MCQ",
+    "marks": 1,
+    "questionText": "The Fourier transform of $e^{-at}u(t)$ is:",
+    "options": [
+      { "id": "a", "text": "$\\frac{1}{a+j\\omega}$" },
+      { "id": "b", "text": "$\\frac{1}{a-j\\omega}$" },
+      { "id": "c", "text": "$\\frac{1}{s+a}$" },
+      { "id": "d", "text": "$\\frac{1}{s-a}$" }
+    ],
+    "correctAnswer": "b",
+    "explanation": "The Fourier transform of $e^{-at}u(t)$ for $a > 0$ is $\\frac{1}{a+j\\omega}$."
+  },
+  {
+    "branch": "ME",
+    "subject": "Thermodynamics",
+    "year": 2019,
+    "questionType": "MCQ",
+    "marks": 2,
+    "questionText": "In a Carnot engine, the efficiency is given by $\\eta = 1 - \\frac{T_C}{T_H}$. If $T_H = 500K$ and $T_C = 300K$, what is the efficiency?",
+    "options": [
+      { "id": "a", "text": "20%" },
+      { "id": "b", "text": "40%" },
+      { "id": "c", "text": "60%" },
+      { "id": "d", "text": "80%" }
+    ],
+    "correctAnswer": "b",
+    "explanation": "Efficiency = $1 - \\frac{300}{500} = 1 - 0.6 = 0.4 = 40\\%$."
+  }
+]
