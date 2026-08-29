@@ -1,0 +1,32 @@
+[
+  {
+    "architectureStyle": "Option 2 (Unified)",
+    "question": "Consider the following C program. What is the output?\n\n[\n\\text{int main() { int x = 5; printf(\"%d\", ++x); return 0; }}\n]",
+    "answer": "b",
+    "yearTag": 2021
+  },
+  {
+    "architectureStyle": "Option 2 (Unified)",
+    "question": "Which of the following sorting algorithms have a worst-case time complexity of $O(n \\log n)$?",
+    "answer": "[\"a\", \"c\"]",
+    "yearTag": 2021
+  },
+  {
+    "architectureStyle": "Option 2 (Unified)",
+    "question": "Consider a system with $n$ processes sharing $m$ identical resources. What is the minimum value of $m$ required to guarantee no deadlock if each process needs at most $k$ resources?",
+    "answer": "n*(k-1)+1",
+    "yearTag": 2020
+  },
+  {
+    "architectureStyle": "Option 2 (Unified)",
+    "question": "The Fourier transform of $e^{-at}u(t)$ is:",
+    "answer": "b",
+    "yearTag": 2021
+  },
+  {
+    "architectureStyle": "Option 2 (Unified)",
+    "question": "In a Carnot engine, the efficiency is given by $\\eta = 1 - \\frac{T_C}{T_H}$. If $T_H = 500K$ and $T_C = 300K$, what is the efficiency?",
+    "answer": "b",
+    "yearTag": 2019
+  }
+]

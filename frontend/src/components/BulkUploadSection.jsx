@@ -14,8 +14,11 @@ const BulkUploadSection = ({
     const BULK_TEMPLATE = `[
   {
     "questionType": "MCQ",
+    "questionNumber": 1,
     "marks": 1,
     "questionText": "The value of $\\\\int_0^1 x^2\\\\,dx$ is",
+    "chapter": "Calculus",
+    "yearTag": "2024",
     "options": [
       { "id": "A", "text": "$1/3$" },
       { "id": "B", "text": "$1/2$" },
@@ -28,8 +31,11 @@ const BulkUploadSection = ({
   },
   {
     "questionType": "MSQ",
+    "questionNumber": 2,
     "marks": 2,
     "questionText": "Which of the following are prime numbers?",
+    "chapter": "Number Theory",
+    "yearTag": "2023",
     "options": [
       { "id": "A", "text": "2" },
       { "id": "B", "text": "4" },
@@ -42,8 +48,11 @@ const BulkUploadSection = ({
   },
   {
     "questionType": "NAT",
+    "questionNumber": 3,
     "marks": 1,
     "questionText": "How many bits are in one byte?",
+    "chapter": "Computer Fundamentals",
+    "yearTag": "2022",
     "options": [],
     "correctAnswer": 8,
     "explanation": "",
@@ -70,8 +79,8 @@ const BulkUploadSection = ({
             </div>
 
             <p className="text-xs text-slate-400">
-                Branch, subject and year are taken from the dropdowns above — do not include them in the JSON.
-                Each question needs: questionType (MCQ/MSQ/NAT), marks (1 or 2), questionText, options (not for NAT),
+                Branch, subject, and chapter are taken from the dropdowns above — do not include them in the JSON.
+                Each question needs: questionType (MCQ/MSQ/NAT), marks (1 or 2), questionText, chapter (optional), yearTag (optional, e.g. "2024"), options (not for NAT),
                 correctAnswer ("A" for MCQ, ["A","C"] for MSQ, number for NAT), optional explanation and imageUrls.
             </p>
 

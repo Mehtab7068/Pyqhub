@@ -3,36 +3,52 @@ import { useDispatch, useSelector } from 'react-redux';
 import FilterSelection from './FilterSelection';
 import ResultsScreen from './ResultsScreen';
 import TestScreen from './TestScreen';
+import NoQuestionsPage from './NoQuestionsPage';
 import { setCurrentIndex, setAnswer, toggleMarkForReview, setTimeRemaining, submitTest, resetTest } from '../app/slices/testSlice';
-import { setBranch, setSubject, setYear } from '../app/slices/filterSlice';
+import { setBranch, setSubject, setMode, setChapter, setExam } from '../app/slices/filterSlice';
 import { fetchQuestions } from '../app/slices/testSlice';
-import { YEAR_LIST, getBranchesForExam, getSubjectsForBranch } from '../data/gateData';
+import { getBranchesForExam, getSubjectsForBranch, getChaptersForSubject } from '../data/gateData';
 import toast from 'react-hot-toast';
 
 const ExamInterface = () => {
     const dispatch = useDispatch();
-    const { exam, branch, subject, year } = useSelector((state) => state.filter);
-    const { questions, currentIndex, answers, markedForReview, timeRemaining, isSubmitted, score, testConfig, loading: testLoading, error } = useSelector((state) => state.test);
+    const { exam, branch, subject, mode, chapter } = useSelector((state) => state.filter);
+    const { questions, currentIndex, answers, markedForReview, timeRemaining, isSubmitted, score, testConfig, loading: testLoading, error, noQuestionsFound } = useSelector((state) => state.test);
 
     // Static cascading data (exam-aware)
     const branches = getBranchesForExam(exam);
     const subjects = branch ? getSubjectsForBranch(exam, branch) : [];
-    const years = subject ? YEAR_LIST : [];
+    const chapters = subject ? getChaptersForSubject(subject) : [];
 
     // Cascading handlers: changing a parent resets its children
     const handleBranchChange = (e) => {
         dispatch(setBranch(e.target.value));
         dispatch(setSubject(''));
-        dispatch(setYear(''));
+    };
+
+    const handleExamChange = (e) => {
+        dispatch(setExam(e.target.value));
+        // Reset dependent selections
+        dispatch(setBranch(''));
+        dispatch(setSubject(''));
     };
 
     const handleSubjectChange = (e) => {
-        dispatch(setSubject(e.target.value));
-        dispatch(setYear(''));
+        const newSubject = e.target.value;
+        dispatch(setSubject(newSubject));
+        dispatch(setChapter(''));
+        if (newSubject) {
+            const chapters = getChaptersForSubject(newSubject);
+            // Optionally dispatch to Redux if needed elsewhere
+        }
     };
 
-    const handleYearChange = (e) => {
-        dispatch(setYear(e.target.value));
+    const handleModeChange = (e) => {
+        dispatch(setMode(e.target.value));
+    };
+
+    const handleChapterChange = (e) => {
+        dispatch(setChapter(e.target.value));
     };
 
     // Timer effect — runs while practice is active (not submitted) and time remains
@@ -54,10 +70,11 @@ const ExamInterface = () => {
     }, [timeRemaining, isSubmitted, questions.length, dispatch]);
 
     const handleStartTest = useCallback(() => {
-        if (!branch || !subject || !year) return;
-        dispatch(fetchQuestions({ exam, branch, subject, year }));
+        if (!branch || !subject) return;
+        if (mode === 'chapter' && !chapter) return;
+        dispatch(fetchQuestions({ exam, branch, subject, chapter: mode === 'chapter' ? chapter : undefined }));
         dispatch(setTimeRemaining(testConfig.durationMinutes * 60));
-    }, [exam, branch, subject, year, dispatch, testConfig.durationMinutes]);
+    }, [exam, branch, subject, mode, chapter, dispatch, testConfig.durationMinutes]);
 
     const handleAnswerChange = useCallback((answer) => {
         const currentQuestion = questions[currentIndex];
@@ -78,7 +95,6 @@ const ExamInterface = () => {
             dispatch(resetTest());
             dispatch(setBranch(''));
             dispatch(setSubject(''));
-            dispatch(setYear(''));
         }
     }, [dispatch]);
 
@@ -89,6 +105,19 @@ const ExamInterface = () => {
         return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // No questions found screen - show when backend indicates no questions available for this subject/chapter
+    if (noQuestionsFound && questions.length === 0 && !isSubmitted) {
+        return (
+            <NoQuestionsPage
+                exam={exam}
+                branch={branch}
+                subject={subject}
+                chapter={chapter}
+                onReset={handleReset}
+            />
+        );
+    }
+
     // Filter selection screen
     if (questions.length === 0 && !isSubmitted) {
         return (
@@ -96,13 +125,16 @@ const ExamInterface = () => {
                 exam={exam}
                 branch={branch}
                 subject={subject}
-                year={year}
+                mode={mode}
+                chapter={chapter}
                 branches={branches}
                 subjects={subjects}
-                years={years}
+                chapters={chapters}
                 onBranchChange={handleBranchChange}
                 onSubjectChange={handleSubjectChange}
-                onYearChange={handleYearChange}
+                onModeChange={handleModeChange}
+                onChapterChange={handleChapterChange}
+                onExamChange={handleExamChange}
                 onStartTest={handleStartTest}
                 testLoading={testLoading}
                 error={error}

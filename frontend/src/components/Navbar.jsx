@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { setExam } from '../app/slices/filterSlice';
 import { resetTest } from '../app/slices/testSlice';
 import { logoutUser } from '../app/slices/authSlice';
-import { EXAM_LIST, EXAM_DATA } from '../data/gateData';
 
 const Navbar = ({ isTestInProgress = false }) => {
     const dispatch = useDispatch();
@@ -13,29 +11,27 @@ const Navbar = ({ isTestInProgress = false }) => {
     const exam = useSelector((state) => state.filter.exam);
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    const handleExamChange = (newExam) => {
-        if (newExam === exam) return;
-        dispatch(setExam(newExam));
-        dispatch(resetTest());
-        setMobileMenuOpen(false);
-    };
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
     const handleLogout = async () => {
         await dispatch(logoutUser());
         navigate('/');
         setMobileMenuOpen(false);
+        setProfileMenuOpen(false);
     };
 
     const isAdmin = user?.role === 'admin';
+
+    const navLinkClass = (path) =>
+        `text-sm font-medium transition-colors duration-200 ${location.pathname === path || location.pathname.startsWith(path + '/') ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`;
 
     return (
         <nav className="glass-panel sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
-                    {/* Brand */}
+                    {/* Left: Brand */}
                     <Link to="/" className="flex items-center gap-2 shrink-0">
-                        <span className="text-2xl font-extrabold text-gradient tracking-tight">GATEQuest</span>
+                        <span className="text-2xl font-extrabold text-gradient tracking-tight">PYQ Platform</span>
                         {isTestInProgress && (
                             <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-xs font-medium">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
@@ -43,6 +39,68 @@ const Navbar = ({ isTestInProgress = false }) => {
                             </span>
                         )}
                     </Link>
+
+                    {/* Center: Nav links - desktop */}
+                    {!isTestInProgress && (
+                        <div className="hidden lg:flex items-center gap-6">
+                            <Link to="/" className={navLinkClass('/')}>Home</Link>
+                            <Link to="/about" className={navLinkClass('/about')}>About Us</Link>
+                            <Link to="/contact" className={navLinkClass('/contact')}>Contact Us</Link>
+                            {isAdmin && (
+                                <Link to="/admin" className={navLinkClass('/admin')}>Admin Portal</Link>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Right: Profile dropdown */}
+                    {isAuthenticated && (
+                        <div className="relative ml-4">
+                            <button
+                                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                                className="flex items-center gap-1 text-sm text-slate-300 hover:text-neon-cyan focus:outline-none"
+                            >
+                                <span className="inline-block w-6 h-6 rounded-full bg-neon-cyan text-gray-900 flex items-center justify-center font-medium">
+                                    {user?.name?.[0] || 'U'}
+                                </span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            {profileMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1">
+                                    {isAdmin && (
+                                        <Link
+                                            to="/admin"
+                                            onClick={() => setProfileMenuOpen(false)}
+                                            className="block px-4 py-2 text-sm text-neon-cyan hover:bg-white/10"
+                                        >
+                                            Admin Portal
+                                        </Link>
+                                    )}
+                                    <Link
+                                        to="/account"
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
+                                    >
+                                        Account
+                                    </Link>
+                                    <Link
+                                        to="/account/edit"
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
+                                    >
+                                        Edit Profile
+                                    </Link>
+                                    <button
+                                        onClick={() => { setProfileMenuOpen(false); handleLogout(); }}
+                                        className="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-white/10"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Mobile menu button */}
                     <button
@@ -60,100 +118,34 @@ const Navbar = ({ isTestInProgress = false }) => {
                             </svg>
                         )}
                     </button>
-
-                    {/* Exam switcher - hidden on mobile, shown on desktop */}
-                    {!isTestInProgress && (
-                        <div className="hidden md:flex items-center gap-1 overflow-x-auto">
-                            {EXAM_LIST.map((e) => (
-                                <button
-                                    key={e}
-                                    onClick={() => handleExamChange(e)}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${exam === e
-                                        ? 'bg-white/15 text-white shadow-[0_0_18px_rgba(79,124,255,0.35)]'
-                                        : 'text-slate-300 hover:bg-white/10'
-                                        }`}
-                                >
-                                    {EXAM_DATA[e].label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Nav links - desktop */}
-                    {!isTestInProgress && (
-                        <div className="hidden lg:flex items-center gap-3 shrink-0">
-                            {isAuthenticated && (
-                                <Link
-                                    to="/"
-                                    className="text-sm font-medium text-neon-cyan"
-                                >
-                                    Practice
-                                </Link>
-                            )}
-                            {isAuthenticated ? (
-                                <>
-                                    {isAdmin && (
-                                        <Link
-                                            to="/admin"
-                                            className={`text-sm font-medium ${location.pathname.startsWith('/admin') ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`}
-                                        >
-                                            Admin
-                                        </Link>
-                                    )}
-                                    <span className="text-sm text-slate-300 hidden xl:inline">
-                                        Hi, {user?.name?.split(' ')[0] || 'User'}
-                                    </span>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="text-sm font-medium text-rose-400 hover:text-rose-300"
-                                    >
-                                        Logout
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <Link
-                                        to="/login"
-                                        className="text-sm font-medium text-slate-300 hover:text-neon-cyan"
-                                    >
-                                        Login
-                                    </Link>
-                                    <Link
-                                        to="/register"
-                                        className="text-sm font-medium px-3 py-1.5 rounded-lg bg-white/10 text-white hover:bg-white/15 border border-white/10"
-                                    >
-                                        Register
-                                    </Link>
-                                </>
-                            )}
-                        </div>
-                    )}
                 </div>
 
                 {/* Mobile menu dropdown */}
                 {mobileMenuOpen && (
                     <div className="lg:hidden pb-4 border-t border-white/10 mt-2 pt-4 animate-fade-up">
-                        {/* Mobile exam switcher */}
-                        {!isTestInProgress && (
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {EXAM_LIST.map((e) => (
-                                    <button
-                                        key={e}
-                                        onClick={() => handleExamChange(e)}
-                                        className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${exam === e
-                                            ? 'bg-white/15 text-white shadow-[0_0_18px_rgba(79,124,255,0.35)]'
-                                            : 'text-slate-300 hover:bg-white/10'
-                                            }`}
-                                    >
-                                        {EXAM_DATA[e].label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Mobile nav links */}
                         {!isTestInProgress && (
                             <div className="flex flex-col gap-2">
+                                <Link
+                                    to="/"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={`text-sm font-medium py-2 ${location.pathname === '/' ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`}
+                                >
+                                    Home
+                                </Link>
+                                <Link
+                                    to="/about"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={`text-sm font-medium py-2 ${location.pathname === '/about' ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`}
+                                >
+                                    About Us
+                                </Link>
+                                <Link
+                                    to="/contact"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className={`text-sm font-medium py-2 ${location.pathname === '/contact' ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`}
+                                >
+                                    Contact Us
+                                </Link>
                                 {isAuthenticated && (
                                     <Link
                                         to="/"

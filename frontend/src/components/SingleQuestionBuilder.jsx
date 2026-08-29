@@ -6,7 +6,7 @@ const SingleQuestionBuilder = ({ current, onUpdate, onOptionUpdate, onToggleMsq,
         <div className="glass-card p-4 sm:p-5 space-y-4">
             <h2 className="font-semibold text-slate-100">2. Build Question</h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Question Type</label>
                     <select
@@ -30,6 +30,39 @@ const SingleQuestionBuilder = ({ current, onUpdate, onOptionUpdate, onToggleMsq,
                         <option value={2}>2 Marks</option>
                     </select>
                 </div>
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Question Number</label>
+                    <input
+                        type="number"
+                        value={current.questionNumber}
+                        onChange={(e) => onUpdate('questionNumber', Number(e.target.value))}
+                        min="1"
+                        className="input-dark min-h-11"
+                        placeholder="e.g. 1"
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Chapter / Topic (optional)</label>
+                <input
+                    type="text"
+                    value={current.chapter || ''}
+                    onChange={(e) => onUpdate('chapter', e.target.value)}
+                    placeholder="e.g. Digital Logic, Operating Systems, etc."
+                    className="input-dark"
+                />
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">Year Tag (optional)</label>
+                <input
+                    type="text"
+                    value={current.yearTag || ''}
+                    onChange={(e) => onUpdate('yearTag', e.target.value)}
+                    placeholder="e.g. 2024, 2023, 2022, etc."
+                    className="input-dark"
+                />
             </div>
 
             <div>

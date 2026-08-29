@@ -30,6 +30,12 @@ const questionSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Question text is required'],
         },
+        questionNumber: {
+            type: Number,
+            required: [true, 'Question number is required'],
+            min: [1, 'Question number must be at least 1'],
+            default: 1,
+        },
         options: {
             type: [optionSchema],
             validate: {
@@ -48,9 +54,19 @@ const questionSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        chapter: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         imageUrls: {
             type: [String],
             default: [],
+        },
+        yearTag: {
+            type: Number,
+            min: [2000, 'Year seems invalid'],
+            max: [2100, 'Year seems invalid'],
         },
     }
 );
@@ -119,5 +135,22 @@ questionBankSchema.index({ exam: 1, branch: 1, 'subjects.name': 1 });
 questionBankSchema.index({ exam: 1, branch: 1, 'subjects.name': 1, 'subjects.years.year': 1 });
 questionBankSchema.index({ exam: 1, 'subjects.name': 1 });
 questionBankSchema.index({ branch: 1, 'subjects.name': 1 });
+
+// Pre-save middleware: auto-assign questionNumber to any questions missing it
+questionBankSchema.pre('save', function (next) {
+    let qNum = 1;
+    this.subjects.forEach((subject) => {
+        subject.years.forEach((year) => {
+            year.questions.forEach((q) => {
+                if (q.questionNumber === undefined || q.questionNumber === null || isNaN(Number(q.questionNumber)) || Number(q.questionNumber) < 1) {
+                    q.questionNumber = qNum++;
+                } else {
+                    qNum = Math.max(qNum, Number(q.questionNumber) + 1);
+                }
+            });
+        });
+    });
+    next();
+});
 
 export default mongoose.model('QuestionBank', questionBankSchema);

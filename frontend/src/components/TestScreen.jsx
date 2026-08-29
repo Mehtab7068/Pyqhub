@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const TestScreen = () => {
     const dispatch = useDispatch();
     const { questions, currentIndex, answers, submittedAnswers, questionTimes, timeRemaining, isSubmitted, testLoading } = useSelector((state) => state.test);
-    const { branch, subject, year } = useSelector((state) => state.filter);
+    const { branch, subject } = useSelector((state) => state.filter);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showFinishConfirm, setShowFinishConfirm] = useState(false);
     const isTestInProgress = questions.length > 0 && !isSubmitted;
@@ -116,7 +116,10 @@ const TestScreen = () => {
                 `}>
                     <div className="mb-4">
                         <h2 className="text-lg font-bold text-white">{branch} - {subject}</h2>
-                        <p className="text-sm text-slate-400">Year: {year}</p>
+                        {/* Year selection removed; displaying question's yearTag if needed */}
+                        {currentQuestion && currentQuestion.yearTag && (
+                            <p className="text-sm text-neon-cyan mt-1">Question Year: {currentQuestion.yearTag}</p>
+                        )}
                     </div>
 
                     <QuestionPalette

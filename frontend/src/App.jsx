@@ -9,6 +9,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import About from './pages/About';
+import HowToUse from './pages/HowToUse';
+import Contact from './pages/Contact';
+import Account from './pages/Account';
+import EditProfile from './pages/EditProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import './index.css';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -54,6 +59,25 @@ const App = () => {
                                 element={
                                     <ProtectedRoute requireAdmin>
                                         <AdminUpload />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/how-to-use" element={<HowToUse />} />
+                            <Route path="/contact" element={<Contact />} />
+                            <Route
+                                path="/account"
+                                element={
+                                    <ProtectedRoute>
+                                        <Account />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/account/edit"
+                                element={
+                                    <ProtectedRoute>
+                                        <EditProfile />
                                     </ProtectedRoute>
                                 }
                             />

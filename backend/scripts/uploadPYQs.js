@@ -24,7 +24,9 @@ function validateQuestion(q, index) {
 
     if (!q.branch || typeof q.branch !== 'string') errors.push(`Index ${index}: branch is required and must be a string`);
     if (!q.subject || typeof q.subject !== 'string') errors.push(`Index ${index}: subject is required and must be a string`);
-    if (!q.year || typeof q.year !== 'number') errors.push(`Index ${index}: year is required and must be a number`);
+    // Support both year and yearTag (Option 2 unified format)
+    const yearValue = q.year ?? q.yearTag;
+    if (!yearValue || typeof yearValue !== 'number') errors.push(`Index ${index}: year/yearTag is required and must be a number`);
     if (!q.questionText || typeof q.questionText !== 'string') errors.push(`Index ${index}: questionText is required and must be a string`);
     if (!q.correctAnswer) errors.push(`Index ${index}: correctAnswer is required`);
 
@@ -78,14 +80,18 @@ function groupQuestions(questions) {
             bank.subjects.push(subjectDoc);
         }
 
-        let yearDoc = subjectDoc.years.find((y) => y.year === q.year);
+        // Support both year and yearTag (Option 2 unified format)
+        const yearValue = q.year ?? q.yearTag;
+        let yearDoc = subjectDoc.years.find((y) => y.year === yearValue);
         if (!yearDoc) {
-            yearDoc = { year: q.year, questions: [] };
+            yearDoc = { year: yearValue, questions: [] };
             subjectDoc.years.push(yearDoc);
         }
 
         // Remove _id if present and add to questions array
         const { _id, ...questionData } = q;
+        // Include yearTag in questionData for Option 2 format
+        questionData.yearTag = yearValue;
         yearDoc.questions.push(questionData);
     }
 

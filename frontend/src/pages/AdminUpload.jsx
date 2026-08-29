@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import AdminApiKeyInput from '../components/AdminApiKeyInput';
@@ -7,13 +7,17 @@ import HierarchySelector from '../components/HierarchySelector';
 import BulkUploadSection from '../components/BulkUploadSection';
 import SingleQuestionBuilder from '../components/SingleQuestionBuilder';
 import UploadQueue from '../components/UploadQueue';
-import { YEAR_LIST, getBranchesForExam, getSubjectsForBranch } from '../data/gateData';
+import { getBranchesForExam, getSubjectsForBranch, getChaptersForSubject, EXAM_LIST } from '../data/gateData';
+import { setExam } from '../app/slices/filterSlice';
 import toast from 'react-hot-toast';
 
 const emptyQuestion = () => ({
     questionType: 'MCQ',
     marks: 1,
+    questionNumber: 1,
     questionText: '',
+    chapter: '',
+    yearTag: '',  // Year tag for the question (replaces year dropdown)
     options: [
         { id: 'A', text: '' },
         { id: 'B', text: '' },
@@ -28,11 +32,12 @@ const emptyQuestion = () => ({
 const AdminUpload = () => {
     // Exam from navbar (Redux)
     const exam = useSelector((state) => state.filter.exam);
+    const dispatch = useDispatch();
 
     // Hierarchy selection
     const [branch, setBranch] = useState('');
     const [subject, setSubject] = useState('');
-    const [year, setYear] = useState('');
+    const [chapter, setChapter] = useState('');
 
     // Admin key
     const [apiKey, setApiKey] = useState(() => localStorage.getItem('admin_api_key') || '');
@@ -55,7 +60,12 @@ const AdminUpload = () => {
 
     const branches = getBranchesForExam(exam);
     const subjects = branch ? getSubjectsForBranch(exam, branch) : [];
-    const years = subject ? YEAR_LIST : [];
+    const chapters = subject ? getChaptersForSubject(subject) : [];
+
+    // Fetch chapters when subject changes (using static data)
+    useEffect(() => {
+        // Chapters are now derived statically from gateData.js
+    }, [exam, branch, subject]);
 
     const saveApiKey = (value) => {
         setApiKey(value);
@@ -102,7 +112,9 @@ const AdminUpload = () => {
     };
 
     const validateCurrent = () => {
-        if (!branch || !subject || !year) return 'Select branch, subject and year first';
+        if (!branch || !subject) return 'Select branch and subject first';
+        const qNum = Number(current.questionNumber);
+        if (!current.questionNumber || isNaN(qNum) || qNum < 1) return 'Question number is required (must be >= 1)';
         if (!current.questionText.trim()) return 'Question text is required';
         if (current.questionType !== 'NAT') {
             const filled = current.options.filter((o) => o.text.trim());
@@ -125,7 +137,7 @@ const AdminUpload = () => {
             return;
         }
         setValidationError('');
-        setQueue((prev) => [...prev, { ...current, exam, branch, subject, year: Number(year) }]);
+        setQueue((prev) => [...prev, { ...current, exam, branch, subject, chapter, yearTag: current.yearTag }]);
         setCurrent(emptyQuestion());
         toast.success('Question added to queue');
     };
@@ -146,7 +158,8 @@ const AdminUpload = () => {
         try {
             // Step 1: upload images for each question, collect URLs
             const prepared = [];
-            for (const q of queue) {
+            for (let i = 0; i < queue.length; i++) {
+                const q = queue[i];
                 let imageUrls = [];
                 if (q.images.length > 0) {
                     const formData = new FormData();
@@ -155,13 +168,18 @@ const AdminUpload = () => {
                     imageUrls = data.data;
                 }
 
+                // Ensure questionNumber is always set (fallback to queue index + 1)
+                const questionNumber = q.questionNumber && q.questionNumber >= 1 ? Number(q.questionNumber) : (i + 1);
+
                 prepared.push({
                     exam: q.exam,
                     branch: q.branch,
                     subject: q.subject,
-                    year: q.year,
+                    chapter: q.chapter || '',
+                    yearTag: q.yearTag || '',
                     questionType: q.questionType,
                     marks: Number(q.marks),
+                    questionNumber,
                     questionText: q.questionText,
                     options: q.questionType === 'NAT' ? [] : q.options.filter((o) => o.text.trim()),
                     correctAnswer: q.questionType === 'NAT' ? Number(q.correctAnswer) : q.correctAnswer,
@@ -173,7 +191,7 @@ const AdminUpload = () => {
             // Step 2: bulk upload questions
             const { data } = await api.post('/admin/bulk-upload', prepared);
 
-            toast.success(`Successfully uploaded ${data.count} question(s)`);
+            toast.success(`Upload complete: ${data.inserted ?? data.count} new, ${data.updated ?? 0} updated`);
             setQueue([]);
         } catch (err) {
             toast.error(err.response?.data?.message || err.message || 'Upload failed');
@@ -187,8 +205,11 @@ const AdminUpload = () => {
     const BULK_TEMPLATE = `[
   {
     "questionType": "MCQ",
+    "questionNumber": 1,
     "marks": 1,
     "questionText": "The value of $\\\\int_0^1 x^2\\\\,dx$ is",
+    "chapter": "Calculus",
+    "yearTag": "2024",
     "options": [
       { "id": "A", "text": "$1/3$" },
       { "id": "B", "text": "$1/2$" },
@@ -201,8 +222,11 @@ const AdminUpload = () => {
   },
   {
     "questionType": "MSQ",
+    "questionNumber": 2,
     "marks": 2,
     "questionText": "Which of the following are prime numbers?",
+    "chapter": "Number Theory",
+    "yearTag": "2023",
     "options": [
       { "id": "A", "text": "2" },
       { "id": "B", "text": "4" },
@@ -215,8 +239,11 @@ const AdminUpload = () => {
   },
   {
     "questionType": "NAT",
+    "questionNumber": 3,
     "marks": 1,
     "questionText": "How many bits are in one byte?",
+    "chapter": "Computer Fundamentals",
+    "yearTag": "2022",
     "options": [],
     "correctAnswer": 8,
     "explanation": "",
@@ -229,6 +256,8 @@ const AdminUpload = () => {
         const n = i + 1;
         if (!q || typeof q !== 'object') return [`Q${n}: not an object`];
         if (!['MCQ', 'MSQ', 'NAT'].includes(q.questionType)) errs.push(`Q${n}: questionType must be MCQ, MSQ or NAT`);
+        if (q.questionNumber === undefined || q.questionNumber === null || isNaN(Number(q.questionNumber)) || Number(q.questionNumber) < 1)
+            errs.push(`Q${n}: questionNumber must be a positive number`);
         if (![1, 2].includes(q.marks)) errs.push(`Q${n}: marks must be 1 or 2`);
         if (!q.questionText || !String(q.questionText).trim()) errs.push(`Q${n}: questionText is required`);
         if (q.questionType === 'NAT') {
@@ -248,8 +277,8 @@ const AdminUpload = () => {
 
     const parseBulk = () => {
         setBulkParsed(null);
-        if (!branch || !subject || !year) {
-            setBulkErrors(['Select branch, subject and year first']);
+        if (!branch || !subject) {
+            setBulkErrors(['Select branch and subject first']);
             return;
         }
         let parsed;
@@ -295,13 +324,15 @@ const AdminUpload = () => {
         }
         setUploading(true);
         try {
-            const payload = bulkParsed.map((q) => ({
+            const payload = bulkParsed.map((q, i) => ({
                 exam,
                 branch,
                 subject,
-                year: Number(year),
+                chapter: q.chapter || '',
+                yearTag: q.yearTag || '',
                 questionType: q.questionType,
                 marks: Number(q.marks),
+                questionNumber: q.questionNumber && q.questionNumber >= 1 ? Number(q.questionNumber) : (i + 1),
                 questionText: q.questionText,
                 options: q.questionType === 'NAT' ? [] : q.options.filter((o) => o && o.id && String(o.text).trim()),
                 correctAnswer: q.questionType === 'NAT' ? Number(q.correctAnswer) : q.correctAnswer,
@@ -309,7 +340,7 @@ const AdminUpload = () => {
                 imageUrls: Array.isArray(q.imageUrls) ? q.imageUrls : [],
             }));
             const { data } = await api.post('/admin/bulk-upload', payload);
-            toast.success(`Successfully uploaded ${data.count} question(s) to ${branch} → ${subject} → ${year}`);
+            toast.success(`Upload complete: ${data.inserted ?? data.count} new, ${data.updated ?? 0} updated → ${branch} → ${subject}`);
             setBulkJson('');
             setBulkParsed(null);
             setBulkErrors([]);
@@ -325,7 +356,7 @@ const AdminUpload = () => {
     // Clear validation error when current question or hierarchy changes
     React.useEffect(() => {
         setValidationError('');
-    }, [current, branch, subject, year]);
+    }, [current, branch, subject]);
 
     return (
         <div className="min-h-screen bg-night-900">
@@ -333,7 +364,21 @@ const AdminUpload = () => {
             <div className="py-8 px-4">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-2xl font-bold text-slate-100">Admin — Upload {exam} PYQs</h1>
+                        <div className="flex items-center justify-between">
+                            <h1 className="text-2xl font-bold text-slate-100">Admin — Upload {exam} PYQs</h1>
+                            {/* Exam selector */}
+                            <select
+                                value={exam}
+                                onChange={(e) => dispatch(setExam(e.target.value))}
+                                className="input-dark min-h-11 ml-4"
+                            >
+                                {EXAM_LIST.map((ex) => (
+                                    <option key={ex} value={ex}>
+                                        {ex}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <AdminApiKeyInput apiKey={apiKey} onSave={saveApiKey} />
@@ -342,13 +387,13 @@ const AdminUpload = () => {
                         exam={exam}
                         branch={branch}
                         subject={subject}
-                        year={year}
+                        chapter={chapter}
                         branches={branches}
                         subjects={subjects}
-                        years={years}
+                        chapters={chapters}
                         onBranchChange={setBranch}
                         onSubjectChange={setSubject}
-                        onYearChange={setYear}
+                        onChapterChange={setChapter}
                     />
 
                     {/* Mode toggle */}

@@ -23,7 +23,7 @@ const UploadQueue = ({ queue, onRemove, onUpload, uploading }) => {
                         <li key={i} className="py-3 flex items-start justify-between gap-4">
                             <div className="min-w-0">
                                 <p className="text-xs text-slate-400 mb-1">
-                                    {q.branch} → {q.subject} → {q.year} · {q.questionType} · {q.marks} mark(s)
+                                    {q.branch} → {q.subject} → {q.yearTag || 'N/A'} · {q.questionType} · {q.marks} mark(s)
                                     {q.images?.length > 0 && ` · ${q.images.length} image(s)`}
                                 </p>
                                 <div className="text-sm text-slate-200 truncate">

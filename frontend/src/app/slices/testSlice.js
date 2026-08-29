@@ -3,11 +3,11 @@ import api from '../../services/api';
 
 export const fetchQuestions = createAsyncThunk(
     'test/fetchQuestions',
-    async ({ exam, branch, subject, year }, { rejectWithValue }) => {
+    async ({ exam, branch, subject, chapter }, { rejectWithValue }) => {
         try {
-            const { data } = await api.get('/questions', {
-                params: { exam, branch, subject, year },
-            });
+            const params = { exam, branch, subject, year: 'all', limit: 500 };
+            if (chapter) params.chapter = chapter;
+            const { data } = await api.get('/questions', { params });
             return data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch questions');
@@ -27,6 +27,7 @@ const initialState = {
     score: null,
     loading: false,
     error: null,
+    noQuestionsFound: false,
     testConfig: {
         durationMinutes: 180, // default 3 hours
         totalMarks: 0,
@@ -102,6 +103,7 @@ const testSlice = createSlice({
             state.isSubmitted = false;
             state.score = null;
             state.error = null;
+            state.noQuestionsFound = false;
         },
     },
     extraReducers: (builder) => {
@@ -112,9 +114,10 @@ const testSlice = createSlice({
             })
             .addCase(fetchQuestions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.questions = action.payload;
+                state.questions = action.payload.data || action.payload; // Handle both old and new response format
                 state.currentIndex = 0;
-                state.testConfig.totalMarks = action.payload.reduce((sum, q) => sum + q.marks, 0);
+                state.noQuestionsFound = action.payload.noQuestionsFound || false;
+                state.testConfig.totalMarks = (action.payload.data || action.payload).reduce((sum, q) => sum + q.marks, 0);
             })
             .addCase(fetchQuestions.rejected, (state, action) => {
                 state.loading = false;

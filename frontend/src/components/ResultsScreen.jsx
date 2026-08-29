@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Navbar from './Navbar';
 import { resetTest } from '../app/slices/testSlice';
-import { setBranch as setFilterBranch, setSubject as setFilterSubject, setYear as setFilterYear } from '../app/slices/filterSlice';
+import { setBranch as setFilterBranch, setSubject as setFilterSubject } from '../app/slices/filterSlice';
 import toast from 'react-hot-toast';
 
 const ResultsScreen = () => {
@@ -34,7 +34,6 @@ const ResultsScreen = () => {
             dispatch(resetTest());
             dispatch(setFilterBranch(''));
             dispatch(setFilterSubject(''));
-            dispatch(setFilterYear(''));
         }
     };
 

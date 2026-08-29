@@ -86,6 +86,30 @@ export const resetPassword = createAsyncThunk(
     }
 );
 
+export const updateProfile = createAsyncThunk(
+    'auth/updateProfile',
+    async (profileData, { rejectWithValue }) => {
+        try {
+            const { data } = await api.put('/auth/update-profile', profileData);
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to update profile');
+        }
+    }
+);
+
+export const changePassword = createAsyncThunk(
+    'auth/changePassword',
+    async (passwordData, { rejectWithValue }) => {
+        try {
+            const { data } = await api.put('/auth/change-password', passwordData);
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to change password');
+        }
+    }
+);
+
 const authSlice = createSlice({
     name: 'auth',
     initialState: {
@@ -199,6 +223,19 @@ const authSlice = createSlice({
                 state.token = null;
                 state.isAuthenticated = false;
                 localStorage.removeItem('token');
+            })
+            // Update profile
+            .addCase(updateProfile.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateProfile.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload.data.user;
+            })
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     },
 });

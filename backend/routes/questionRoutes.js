@@ -3,6 +3,7 @@ import {
     getBranches,
     getSubjects,
     getYears,
+    getChapters,
     getQuestions,
     bulkUploadQuestions,
     uploadImages,
@@ -16,6 +17,7 @@ const router = express.Router();
 router.get('/branches', getBranches);
 router.get('/subjects', getSubjects);
 router.get('/years', getYears);
+router.get('/chapters', getChapters);
 router.get('/questions', getQuestions);
 
 // Protected admin routes

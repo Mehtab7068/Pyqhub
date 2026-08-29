@@ -26,14 +26,14 @@ export const fetchSubjects = createAsyncThunk(
     }
 );
 
-export const fetchYears = createAsyncThunk(
-    'filter/fetchYears',
-    async ({ branch, subject }, { rejectWithValue }) => {
+export const fetchChapters = createAsyncThunk(
+    'filter/fetchChapters',
+    async ({ exam, branch, subject }, { rejectWithValue }) => {
         try {
-            const { data } = await api.get('/years', { params: { branch, subject } });
-            return { branch, subject, years: data.data };
+            const { data } = await api.get('/chapters', { params: { exam, branch, subject } });
+            return { branch, subject, chapters: data.data };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch years');
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch chapters');
         }
     }
 );
@@ -42,14 +42,15 @@ const initialState = {
     exam: 'GATE',
     branch: '',
     subject: '',
-    year: '',
+    mode: 'subject', // 'subject' (whole subject) | 'chapter' (chapterwise)
+    chapter: '',
     branches: [],
     subjects: [],
-    years: [],
+    chapters: [],
     loading: {
         branches: false,
         subjects: false,
-        years: false,
+        chapters: false,
     },
     error: null,
 };
@@ -62,31 +63,39 @@ const filterSlice = createSlice({
             state.exam = action.payload;
             state.branch = '';
             state.subject = '';
-            state.year = '';
+            state.mode = 'subject';
+            state.chapter = '';
             state.subjects = [];
-            state.years = [];
+            state.chapters = [];
         },
         setBranch(state, action) {
             state.branch = action.payload;
             state.subject = '';
-            state.year = '';
+            state.mode = 'subject';
+            state.chapter = '';
             state.subjects = [];
-            state.years = [];
+            state.chapters = [];
         },
         setSubject(state, action) {
             state.subject = action.payload;
-            state.year = '';
-            state.years = [];
+            state.mode = 'subject';
+            state.chapter = '';
+            state.chapters = [];
         },
-        setYear(state, action) {
-            state.year = action.payload;
+        setMode(state, action) {
+            state.mode = action.payload;
+            state.chapter = '';
+        },
+        setChapter(state, action) {
+            state.chapter = action.payload;
         },
         clearFilters(state) {
             state.branch = '';
             state.subject = '';
-            state.year = '';
+            state.mode = 'subject';
+            state.chapter = '';
             state.subjects = [];
-            state.years = [];
+            state.chapters = [];
         },
     },
     extraReducers: (builder) => {
@@ -120,24 +129,24 @@ const filterSlice = createSlice({
                 state.loading.subjects = false;
                 state.error = action.payload;
             })
-            // Fetch years
-            .addCase(fetchYears.pending, (state) => {
-                state.loading.years = true;
+            // Fetch chapters
+            .addCase(fetchChapters.pending, (state) => {
+                state.loading.chapters = true;
                 state.error = null;
             })
-            .addCase(fetchYears.fulfilled, (state, action) => {
-                state.loading.years = false;
+            .addCase(fetchChapters.fulfilled, (state, action) => {
+                state.loading.chapters = false;
                 if (action.payload.branch === state.branch && action.payload.subject === state.subject) {
-                    state.years = action.payload.years;
+                    state.chapters = action.payload.chapters;
                 }
             })
-            .addCase(fetchYears.rejected, (state, action) => {
-                state.loading.years = false;
+            .addCase(fetchChapters.rejected, (state, action) => {
+                state.loading.chapters = false;
                 state.error = action.payload;
             });
     },
 });
 
-export const { setExam, setBranch, setSubject, setYear, clearFilters } = filterSlice.actions;
+export const { setExam, setBranch, setSubject, setMode, setChapter, clearFilters } = filterSlice.actions;
 
 export default filterSlice.reducer;

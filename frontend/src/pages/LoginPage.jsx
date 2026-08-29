@@ -14,7 +14,8 @@ const LoginPage = () => {
         password: '',
     });
 
-    const from = location.state?.from?.pathname || '/';
+    const { user } = useSelector((state) => state.auth);
+    const from = location.state?.from?.pathname || (user?.role === 'admin' ? '/admin' : '/');
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -35,9 +36,10 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await dispatch(loginUser(formData)).unwrap();
+            const result = await dispatch(loginUser(formData)).unwrap();
             toast.success('Login successful! Welcome back.');
-            navigate('/', { replace: true });
+            const role = result?.data?.user?.role;
+            navigate(role === 'admin' ? '/admin' : '/', { replace: true });
         } catch (err) {
             toast.error(err || 'Login failed');
         }

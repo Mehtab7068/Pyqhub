@@ -61,6 +61,8 @@ const migrateQuestions = async () => {
             // Add questions (excluding the _id and the grouping fields)
             for (const q of group.questions) {
                 const { _id, exam, branch, subject, year, ...questionData } = q;
+                // Include yearTag for Option 2 unified format
+                questionData.yearTag = year;
                 yearDoc.questions.push(questionData);
             }
         }

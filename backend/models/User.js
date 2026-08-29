@@ -27,6 +27,39 @@ const userSchema = new mongoose.Schema({
         enum: ['user', 'admin'],
         default: 'user',
     },
+    phone: {
+        type: String,
+        trim: true,
+        maxlength: [15, 'Phone number cannot exceed 15 characters'],
+        default: '',
+    },
+    targetExam: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    targetYear: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    branch: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    college: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'College name cannot exceed 100 characters'],
+        default: '',
+    },
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: [300, 'Bio cannot exceed 300 characters'],
+        default: '',
+    },
     isVerified: {
         type: Boolean,
         default: false,

@@ -33,6 +33,11 @@ const questionSchema = new mongoose.Schema(
             max: [2100, 'Year seems invalid'],
             index: true,
         },
+        yearTag: {
+            type: Number,
+            min: [2000, 'Year seems invalid'],
+            max: [2100, 'Year seems invalid'],
+        },
         questionType: {
             type: String,
             enum: {
@@ -90,5 +95,16 @@ questionSchema.index({ exam: 1, branch: 1, subject: 1, year: 1 });
 questionSchema.index({ exam: 1, branch: 1, subject: 1 });
 questionSchema.index({ exam: 1, branch: 1 });
 questionSchema.index({ exam: 1, subject: 1 });
+
+// Virtual for yearTag (alias for year) - Option 2 unified format
+questionSchema.virtual('yearTag').get(function () {
+    return this.year;
+}).set(function (value) {
+    this.year = value;
+});
+
+// Ensure virtuals are included in JSON output
+questionSchema.set('toJSON', { virtuals: true });
+questionSchema.set('toObject', { virtuals: true });
 
 export default mongoose.model('Question', questionSchema);
