@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser, adminRegisterUser, clearError } from '../app/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 const RegisterPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
     const [formData, setFormData] = useState({
@@ -18,11 +19,13 @@ const RegisterPage = () => {
     const [isAdminRegister, setIsAdminRegister] = useState(false);
     const [apiKey, setApiKey] = useState('');
 
+    const from = location.state?.from?.pathname || '/';
+
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/', { replace: true });
+            navigate(from, { replace: true });
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthenticated, navigate, from]);
 
     useEffect(() => {
         return () => {
@@ -44,7 +47,7 @@ const RegisterPage = () => {
                 await dispatch(registerUser(formData)).unwrap();
                 toast.success('Account created successfully!');
             }
-            navigate('/', { replace: true });
+            navigate(from, { replace: true });
         } catch (err) {
             toast.error(err || 'Registration failed');
         }

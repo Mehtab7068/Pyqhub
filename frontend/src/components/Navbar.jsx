@@ -52,55 +52,66 @@ const Navbar = ({ isTestInProgress = false }) => {
                         </div>
                     )}
 
-                    {/* Right: Profile dropdown */}
-                    {isAuthenticated && (
-                        <div className="relative ml-4">
-                            <button
-                                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                                className="flex items-center gap-1 text-sm text-slate-300 hover:text-neon-cyan focus:outline-none"
-                            >
-                                <span className="inline-block w-6 h-6 rounded-full bg-neon-cyan text-gray-900 flex items-center justify-center font-medium">
-                                    {user?.name?.[0] || 'U'}
-                                </span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {profileMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1">
-                                    {isAdmin && (
+                    {/* Right: Auth buttons or Profile dropdown */}
+                    <div className="flex items-center gap-3 ml-4 lg:ml-0">
+                        {isAuthenticated ? (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                                    className="flex items-center gap-1 text-sm text-slate-300 hover:text-neon-cyan focus:outline-none"
+                                >
+                                    <span className="inline-block w-6 h-6 rounded-full bg-neon-cyan text-gray-900 flex items-center justify-center font-medium">
+                                        {user?.name?.[0] || 'U'}
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {profileMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1">
+                                        {isAdmin && (
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setProfileMenuOpen(false)}
+                                                className="block px-4 py-2 text-sm text-neon-cyan hover:bg-white/10"
+                                            >
+                                                Admin Portal
+                                            </Link>
+                                        )}
                                         <Link
-                                            to="/admin"
+                                            to="/account"
                                             onClick={() => setProfileMenuOpen(false)}
-                                            className="block px-4 py-2 text-sm text-neon-cyan hover:bg-white/10"
+                                            className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
                                         >
-                                            Admin Portal
+                                            Account
                                         </Link>
-                                    )}
-                                    <Link
-                                        to="/account"
-                                        onClick={() => setProfileMenuOpen(false)}
-                                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
-                                    >
-                                        Account
-                                    </Link>
-                                    <Link
-                                        to="/account/edit"
-                                        onClick={() => setProfileMenuOpen(false)}
-                                        className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
-                                    >
-                                        Edit Profile
-                                    </Link>
-                                    <button
-                                        onClick={() => { setProfileMenuOpen(false); handleLogout(); }}
-                                        className="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-white/10"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                        <Link
+                                            to="/account/edit"
+                                            onClick={() => setProfileMenuOpen(false)}
+                                            className="block px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
+                                        >
+                                            Edit Profile
+                                        </Link>
+                                        <button
+                                            onClick={() => { setProfileMenuOpen(false); handleLogout(); }}
+                                            className="w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-white/10"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="hidden lg:flex items-center gap-2">
+                                <Link to="/login" className="text-sm font-medium text-slate-300 hover:text-neon-cyan transition-colors">
+                                    Login
+                                </Link>
+                                <Link to="/register" className="btn-primary px-4 py-2 text-sm min-h-0">
+                                    Register
+                                </Link>
+                            </div>
+                        )}
+                    </div>
 
                     {/* Mobile menu button */}
                     <button

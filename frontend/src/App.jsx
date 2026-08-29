@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import store from './app/store';
 import { getCurrentUser } from './app/slices/authSlice';
+import Home from './pages/Home';
 import ExamPage from './pages/ExamPage';
 import AdminUpload from './pages/AdminUpload';
 import LoginPage from './pages/LoginPage';
@@ -34,14 +35,7 @@ const App = () => {
                     <AnimatedBackground />
                     <div className="relative z-10">
                         <Routes>
-                            <Route
-                                path="/"
-                                element={
-                                    <ProtectedRoute>
-                                        <ExamPage />
-                                    </ProtectedRoute>
-                                }
-                            />
+                            <Route path="/" element={<Home />} />
                             <Route
                                 path="/exam"
                                 element={
