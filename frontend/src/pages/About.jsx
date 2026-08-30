@@ -218,7 +218,7 @@ const About = () => {
                                 <div className="space-y-4 text-slate-300 leading-relaxed">
                                     <p>
                                         Gate PYQ was born from a simple realization: students preparing for competitive exams
-                                        like GATE, JEE, NEET, and UPSC spend countless hours searching for quality previous
+                                        like GATE, JEE, NEET, SSC,UGC-NET and UPSC spend countless hours searching for quality previous
                                         year questions scattered across multiple sources.
                                     </p>
                                     <p>
