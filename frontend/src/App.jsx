@@ -5,6 +5,8 @@ import store from './app/store';
 import { getCurrentUser } from './app/slices/authSlice';
 import Home from './pages/Home';
 import ExamPage from './pages/ExamPage';
+import PracticePage from './pages/PracticePage';
+import MockPage from './pages/MockPage';
 import AdminUpload from './pages/AdminUpload';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -15,6 +17,9 @@ import HowToUse from './pages/HowToUse';
 import Contact from './pages/Contact';
 import Account from './pages/Account';
 import EditProfile from './pages/EditProfile';
+import Progress from './pages/Progress';
+import MistakeReplayPage from './pages/MistakeReplayPage';
+import Leaderboard from './pages/Leaderboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import './index.css';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -41,6 +46,22 @@ const App = () => {
                                 element={
                                     <ProtectedRoute>
                                         <ExamPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/exam/practice"
+                                element={
+                                    <ProtectedRoute>
+                                        <PracticePage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/exam/mock"
+                                element={
+                                    <ProtectedRoute>
+                                        <MockPage />
                                     </ProtectedRoute>
                                 }
                             />
@@ -75,6 +96,23 @@ const App = () => {
                                     </ProtectedRoute>
                                 }
                             />
+                            <Route
+                                path="/progress"
+                                element={
+                                    <ProtectedRoute>
+                                        <Progress />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/replay"
+                                element={
+                                    <ProtectedRoute>
+                                        <MistakeReplayPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="/leaderboard" element={<Leaderboard />} />
                         </Routes>
                     </div>
                 </div>

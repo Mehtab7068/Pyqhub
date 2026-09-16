@@ -60,6 +60,11 @@ const userSchema = new mongoose.Schema({
         maxlength: [300, 'Bio cannot exceed 300 characters'],
         default: '',
     },
+    avatarUrl: {
+        type: String,
+        trim: true,
+        default: '',
+    },
     isVerified: {
         type: Boolean,
         default: false,

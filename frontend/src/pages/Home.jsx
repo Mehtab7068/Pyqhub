@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { logoutUser } from '../app/slices/authSlice';
+import { resetTest } from '../app/slices/testSlice';
+import { setExam } from '../app/slices/filterSlice';
 import AnimatedBackground from '../components/AnimatedBackground';
 
 const Home = () => {
@@ -13,6 +15,11 @@ const Home = () => {
     const handleLogout = async () => {
         await dispatch(logoutUser());
         navigate('/');
+    };
+
+    const handleStartPracticing = () => {
+        dispatch(resetTest());
+        dispatch(setExam(''));
     };
 
     const features = [
@@ -141,7 +148,7 @@ const Home = () => {
                         >
                             {isAuthenticated ? (
                                 <>
-                                    <Link to="/exam" className="btn-primary px-8 py-3 text-lg">
+                                    <Link to="/exam" onClick={handleStartPracticing} className="btn-primary px-8 py-3 text-lg">
                                         Start Practicing
                                     </Link>
                                     <Link to="/about" className="btn-ghost px-8 py-3 text-lg">
@@ -150,7 +157,7 @@ const Home = () => {
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/exam" className="btn-primary px-8 py-3 text-lg">
+                                    <Link to="/exam" onClick={handleStartPracticing} className="btn-primary px-8 py-3 text-lg">
                                         Start Practicing
                                     </Link>
                                     <Link to="/register" className="btn-ghost px-8 py-3 text-lg">

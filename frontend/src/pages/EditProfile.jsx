@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfile, changePassword, clearError } from '../app/slices/authSlice';
+import { updateProfile, uploadAvatar, changePassword, clearError } from '../app/slices/authSlice';
 import { EXAM_DATA, YEAR_LIST, getBranchesForExam } from '../data/gateData';
 import Navbar from '../components/Navbar';
 import toast from 'react-hot-toast';
@@ -27,6 +27,19 @@ const EditProfile = () => {
         confirmPassword: '',
     });
     const [passwordLoading, setPasswordLoading] = useState(false);
+
+    const handleAvatarChange = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+            await dispatch(uploadAvatar(file)).unwrap();
+            toast.success('Profile image updated successfully!');
+        } catch (err) {
+            toast.error(err || 'Failed to upload profile image');
+        } finally {
+            event.target.value = '';
+        }
+    };
 
     useEffect(() => {
         if (user) {
@@ -105,6 +118,20 @@ const EditProfile = () => {
                 {/* Profile form */}
                 <form onSubmit={handleProfileSubmit} className="glass-card p-6 sm:p-8 space-y-5 animate-fade-up">
                     <h2 className="text-lg font-bold text-slate-100">Profile Information</h2>
+
+                    <div className="flex items-center gap-4 pb-2">
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-neon-cyan to-blue-500 flex items-center justify-center text-2xl font-extrabold text-gray-900 shrink-0">
+                            {user?.avatarUrl ? <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" /> : user?.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-slate-200">Profile image</p>
+                            <p className="text-xs text-slate-500 mt-1">JPG, PNG, WebP, GIF or SVG up to 5 MB.</p>
+                            <label className="inline-flex cursor-pointer text-sm text-neon-cyan hover:underline mt-2">
+                                Choose image
+                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" onChange={handleAvatarChange} className="hidden" />
+                            </label>
+                        </div>
+                    </div>
 
                     <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>

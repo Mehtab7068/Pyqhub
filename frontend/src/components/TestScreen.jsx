@@ -3,16 +3,23 @@ import { useDispatch, useSelector } from 'react-redux';
 import Navbar from './Navbar';
 import QuestionViewer from './QuestionViewer';
 import QuestionPalette from './QuestionPalette';
-import { setCurrentIndex, setAnswer, submitAnswer, incrementQuestionTime, submitTest } from '../app/slices/testSlice';
+import { setCurrentIndex, setAnswer, setConfidence, submitAnswer, incrementQuestionTime, submitTest, resetTest } from '../app/slices/testSlice';
 import toast from 'react-hot-toast';
+import useLeaveTestGuard from '../hooks/useLeaveTestGuard';
 
 const TestScreen = () => {
     const dispatch = useDispatch();
-    const { questions, currentIndex, answers, submittedAnswers, questionTimes, timeRemaining, isSubmitted, testLoading } = useSelector((state) => state.test);
+    const { questions, currentIndex, answers, confidence, submittedAnswers, questionTimes, timeRemaining, isSubmitted, testLoading } = useSelector((state) => state.test);
     const { branch, subject } = useSelector((state) => state.filter);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showFinishConfirm, setShowFinishConfirm] = useState(false);
     const isTestInProgress = questions.length > 0 && !isSubmitted;
+
+    const leaveTest = React.useCallback(() => {
+        dispatch(resetTest());
+    }, [dispatch]);
+
+    useLeaveTestGuard(isTestInProgress, leaveTest);
 
     const currentQuestion = questions[currentIndex];
     const isCurrentSubmitted = currentQuestion ? !!submittedAnswers[currentQuestion._id] : false;
@@ -193,6 +200,23 @@ const TestScreen = () => {
                                     onAnswerChange={handleAnswerChange}
                                     showCorrectAnswer={isCurrentSubmitted}
                                 />
+
+                                {!isCurrentSubmitted && (
+                                    <div className="mt-5 p-4 rounded-xl border border-white/10 bg-white/5">
+                                        <p className="text-sm text-slate-300 mb-3">How confident are you?</p>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['low', 'medium', 'high'].map((level) => (
+                                                <button
+                                                    key={level}
+                                                    onClick={() => dispatch(setConfidence({ questionId: currentQuestion._id, confidence: level }))}
+                                                    className={`px-3 py-2 rounded-lg text-sm capitalize border ${confidence[currentQuestion._id] === level ? 'border-neon-cyan bg-neon-cyan/15 text-neon-cyan' : 'border-white/10 text-slate-400 hover:bg-white/10'}`}
+                                                >
+                                                    {level}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Submit answer button (practice mode) */}
                                 {!isCurrentSubmitted && (

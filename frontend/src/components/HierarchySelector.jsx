@@ -1,6 +1,23 @@
 import React from 'react';
 
 const HierarchySelector = ({ exam, branch, subject, chapter, branches, subjects, chapters, onBranchChange, onSubjectChange, onChapterChange }) => {
+    const [customChapters, setCustomChapters] = React.useState([]);
+    const [newChapter, setNewChapter] = React.useState('');
+    const availableChapters = [...new Set([...(chapters || []), ...customChapters, ...(chapter ? [chapter] : [])])];
+
+    React.useEffect(() => {
+        setCustomChapters([]);
+        setNewChapter('');
+    }, [subject]);
+
+    const addCustomChapter = () => {
+        const value = newChapter.trim();
+        if (!value) return;
+        setCustomChapters((previous) => [...new Set([...previous, value])]);
+        onChapterChange(value);
+        setNewChapter('');
+    };
+
     return (
         <div className="glass-card p-4 sm:p-5">
             <h2 className="font-semibold text-slate-100 mb-4">1. Select Hierarchy</h2>
@@ -37,8 +54,28 @@ const HierarchySelector = ({ exam, branch, subject, chapter, branches, subjects,
                         className="input-dark min-h-11 disabled:bg-white/5 disabled:cursor-not-allowed"
                     >
                         <option value="">{subject ? 'Select Chapter (optional)' : 'Select subject first'}</option>
-                        {(chapters || []).map((c) => <option key={c} value={c}>{c}</option>)}
+                        {availableChapters.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
+                    {subject && (
+                        <div className="flex gap-2 mt-2">
+                            <input
+                                type="text"
+                                value={newChapter}
+                                onChange={(e) => setNewChapter(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') addCustomChapter(); }}
+                                placeholder="Add a new chapter"
+                                className="input-dark min-h-10 flex-1"
+                            />
+                            <button
+                                type="button"
+                                onClick={addCustomChapter}
+                                disabled={!newChapter.trim()}
+                                className="btn-primary min-h-10 px-3 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Add
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

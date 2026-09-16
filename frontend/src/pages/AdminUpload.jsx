@@ -7,26 +7,34 @@ import HierarchySelector from '../components/HierarchySelector';
 import BulkUploadSection from '../components/BulkUploadSection';
 import SingleQuestionBuilder from '../components/SingleQuestionBuilder';
 import UploadQueue from '../components/UploadQueue';
+import PracticePaperImporter from '../components/PracticePaperImporter';
 import { getBranchesForExam, getSubjectsForBranch, getChaptersForSubject, EXAM_LIST } from '../data/gateData';
 import { setExam } from '../app/slices/filterSlice';
 import toast from 'react-hot-toast';
+import { getExamConfig } from '../data/examConfig';
 
 const emptyQuestion = () => ({
     questionType: 'MCQ',
     marks: 1,
-    questionNumber: 1,
+    questionNumber: undefined, // Optional - will be assigned sequentially if not provided
     questionText: '',
     chapter: '',
-    yearTag: '',  // Year tag for the question (replaces year dropdown)
+    topic: '',
+    yearTag: '', // Year tag for the question (replaces year dropdown)
+    // New mock‑test related fields with sensible defaults
+    mockTestWeight: 1, // integer 1‑5, default 1
+    isCoreConcept: false,
+    difficulty: 'easy', // 'easy' | 'medium' | 'hard'
+    tags: [], // array of strings
     options: [
         { id: 'A', text: '' },
         { id: 'B', text: '' },
         { id: 'C', text: '' },
         { id: 'D', text: '' },
     ],
-    correctAnswer: '',   // MCQ: 'A' | MSQ: ['A','B'] | NAT: '42'
+    correctAnswer: '', // MCQ: 'A' | MSQ: ['A','B'] | NAT: '42'
     explanation: '',
-    images: [],          // File objects (uploaded later)
+    images: [], // File objects (uploaded later)
 });
 
 const AdminUpload = () => {
@@ -57,14 +65,27 @@ const AdminUpload = () => {
     const [bulkErrors, setBulkErrors] = useState([]);
 
     const [uploading, setUploading] = useState(false);
+    const [storedChapters, setStoredChapters] = useState([]);
 
     const branches = getBranchesForExam(exam);
     const subjects = branch ? getSubjectsForBranch(exam, branch) : [];
-    const chapters = subject ? getChaptersForSubject(subject) : [];
+    const chapters = [...new Set([...(subject ? getChaptersForSubject(subject) : []), ...storedChapters])];
 
-    // Fetch chapters when subject changes (using static data)
+    // Fetch chapters already stored for this subject so bulk-uploaded custom chapters appear in the list.
     useEffect(() => {
-        // Chapters are now derived statically from gateData.js
+        let active = true;
+        if (!exam || !branch || !subject) {
+            setStoredChapters([]);
+            return () => { active = false; };
+        }
+        api.get('/chapters', { params: { exam, branch, subject } })
+            .then(({ data }) => {
+                if (active) setStoredChapters(Array.isArray(data.data) ? data.data : []);
+            })
+            .catch(() => {
+                if (active) setStoredChapters([]);
+            });
+        return () => { active = false; };
     }, [exam, branch, subject]);
 
     const saveApiKey = (value) => {
@@ -113,8 +134,9 @@ const AdminUpload = () => {
 
     const validateCurrent = () => {
         if (!branch || !subject) return 'Select branch and subject first';
+        // Question number is optional for single uploads; if omitted we will assign a sequential number.
         const qNum = Number(current.questionNumber);
-        if (!current.questionNumber || isNaN(qNum) || qNum < 1) return 'Question number is required (must be >= 1)';
+        if (current.questionNumber && (isNaN(qNum) || qNum < 1)) return 'Question number must be a positive number if provided';
         if (!current.questionText.trim()) return 'Question text is required';
         if (current.questionType !== 'NAT') {
             const filled = current.options.filter((o) => o.text.trim());
@@ -129,6 +151,9 @@ const AdminUpload = () => {
         return null;
     };
 
+    // Add the current question to the upload queue.
+    // We no longer assign a `questionNumber` here; the backend will auto‑assign a sequential number
+    // when the field is omitted. This prevents later uploads from overwriting earlier ones.
     const addToQueue = () => {
         const error = validateCurrent();
         if (error) {
@@ -137,7 +162,19 @@ const AdminUpload = () => {
             return;
         }
         setValidationError('');
-        setQueue((prev) => [...prev, { ...current, exam, branch, subject, chapter, yearTag: current.yearTag }]);
+        // Do not set `questionNumber` – let the backend handle it.
+        setQueue((prev) => [
+            ...prev,
+            {
+                ...current,
+                exam,
+                branch,
+                subject,
+                chapter,
+                yearTag: current.yearTag,
+                // questionNumber omitted intentionally
+            },
+        ]);
         setCurrent(emptyQuestion());
         toast.success('Question added to queue');
     };
@@ -146,10 +183,23 @@ const AdminUpload = () => {
         setQueue((prev) => prev.filter((_, i) => i !== index));
     };
 
+    const handleImportedQuestions = (questions) => {
+        setMode('bulk');
+        setBulkJson(JSON.stringify(questions, null, 2));
+        setBulkParsed(null);
+        setBulkErrors([]);
+    };
+
     const uploadAll = useCallback(async () => {
         if (queue.length === 0) return;
         if (!apiKey) {
             toast.error('Enter your admin API key first');
+            return;
+        }
+        // Safety check: ensure all queue items have hierarchy
+        const missingHierarchy = queue.some(q => !q.exam || !q.branch || !q.subject);
+        if (missingHierarchy) {
+            toast.error('Some questions are missing hierarchy (exam/branch/subject). Please re-add them.');
             return;
         }
 
@@ -168,24 +218,32 @@ const AdminUpload = () => {
                     imageUrls = data.data;
                 }
 
-                // Ensure questionNumber is always set (fallback to queue index + 1)
-                const questionNumber = q.questionNumber && q.questionNumber >= 1 ? Number(q.questionNumber) : (i + 1);
-
-                prepared.push({
+                // Include questionNumber only if a valid one is provided; otherwise let the backend assign one.
+                const payload = {
                     exam: q.exam,
                     branch: q.branch,
                     subject: q.subject,
-                    chapter: q.chapter || '',
+                    chapter: q.chapter || chapter || '',
+                    topic: q.topic || '',
                     yearTag: q.yearTag || '',
                     questionType: q.questionType,
                     marks: Number(q.marks),
-                    questionNumber,
+                    // questionNumber will be added conditionally below
                     questionText: q.questionText,
                     options: q.questionType === 'NAT' ? [] : q.options.filter((o) => o.text.trim()),
                     correctAnswer: q.questionType === 'NAT' ? Number(q.correctAnswer) : q.correctAnswer,
                     explanation: q.explanation,
                     imageUrls,
-                });
+                    // Include new mock‑test fields if present
+                    mockTestWeight: q.mockTestWeight !== undefined ? Number(q.mockTestWeight) : 1,
+                    isCoreConcept: !!q.isCoreConcept,
+                    difficulty: q.difficulty || 'easy',
+                    tags: Array.isArray(q.tags) ? q.tags : [],
+                };
+                if (q.questionNumber && q.questionNumber >= 1) {
+                    payload.questionNumber = Number(q.questionNumber);
+                }
+                prepared.push(payload);
             }
 
             // Step 2: bulk upload questions
@@ -205,7 +263,7 @@ const AdminUpload = () => {
     const BULK_TEMPLATE = `[
   {
     "questionType": "MCQ",
-    "questionNumber": 1,
+    // "questionNumber": 1,  // Optional - omit for auto-assign
     "marks": 1,
     "questionText": "The value of $\\\\int_0^1 x^2\\\\,dx$ is",
     "chapter": "Calculus",
@@ -222,7 +280,7 @@ const AdminUpload = () => {
   },
   {
     "questionType": "MSQ",
-    "questionNumber": 2,
+    // "questionNumber": 2,  // Optional - omit for auto-assign
     "marks": 2,
     "questionText": "Which of the following are prime numbers?",
     "chapter": "Number Theory",
@@ -239,7 +297,7 @@ const AdminUpload = () => {
   },
   {
     "questionType": "NAT",
-    "questionNumber": 3,
+    // "questionNumber": 3,  // Optional - omit for auto-assign
     "marks": 1,
     "questionText": "How many bits are in one byte?",
     "chapter": "Computer Fundamentals",
@@ -255,10 +313,15 @@ const AdminUpload = () => {
         const errs = [];
         const n = i + 1;
         if (!q || typeof q !== 'object') return [`Q${n}: not an object`];
-        if (!['MCQ', 'MSQ', 'NAT'].includes(q.questionType)) errs.push(`Q${n}: questionType must be MCQ, MSQ or NAT`);
-        if (q.questionNumber === undefined || q.questionNumber === null || isNaN(Number(q.questionNumber)) || Number(q.questionNumber) < 1)
-            errs.push(`Q${n}: questionNumber must be a positive number`);
-        if (![1, 2].includes(q.marks)) errs.push(`Q${n}: marks must be 1 or 2`);
+        if (!getExamConfig(exam).questionTypes.includes(q.questionType)) {
+            errs.push(`Q${n}: ${q.questionType} is not supported for ${exam}`);
+        }
+        // questionNumber is optional - if provided, must be positive; if omitted, backend will assign sequentially
+        if (q.questionNumber !== undefined && q.questionNumber !== null && (isNaN(Number(q.questionNumber)) || Number(q.questionNumber) < 1))
+            errs.push(`Q${n}: questionNumber must be a positive number if provided`);
+        if (!getExamConfig(exam).marks.includes(Number(q.marks))) {
+            errs.push(`Q${n}: marks must be one of ${getExamConfig(exam).marks.join(', ')}`);
+        }
         if (!q.questionText || !String(q.questionText).trim()) errs.push(`Q${n}: questionText is required`);
         if (q.questionType === 'NAT') {
             if (q.correctAnswer === undefined || q.correctAnswer === null || q.correctAnswer === '' || isNaN(Number(q.correctAnswer)))
@@ -322,25 +385,45 @@ const AdminUpload = () => {
             toast.error('Enter your admin API key first');
             return;
         }
+        // Safety check: ensure hierarchy is selected
+        if (!branch || !subject) {
+            toast.error('Select branch and subject first');
+            return;
+        }
         setUploading(true);
         try {
-            const payload = bulkParsed.map((q, i) => ({
-                exam,
-                branch,
-                subject,
-                chapter: q.chapter || '',
-                yearTag: q.yearTag || '',
-                questionType: q.questionType,
-                marks: Number(q.marks),
-                questionNumber: q.questionNumber && q.questionNumber >= 1 ? Number(q.questionNumber) : (i + 1),
-                questionText: q.questionText,
-                options: q.questionType === 'NAT' ? [] : q.options.filter((o) => o && o.id && String(o.text).trim()),
-                correctAnswer: q.questionType === 'NAT' ? Number(q.correctAnswer) : q.correctAnswer,
-                explanation: q.explanation || '',
-                imageUrls: Array.isArray(q.imageUrls) ? q.imageUrls : [],
-            }));
+            const payload = bulkParsed.map((q, i) => {
+                const item = {
+                    exam,
+                    branch,
+                    subject,
+                    chapter: q.chapter || '',
+                    topic: q.topic || '',
+                    yearTag: q.yearTag || '',
+                    questionType: q.questionType,
+                    marks: Number(q.marks),
+                    questionText: q.questionText,
+                    options: q.questionType === 'NAT' ? [] : q.options.filter((o) => o && o.id && String(o.text).trim()),
+                    correctAnswer: q.questionType === 'NAT' ? Number(q.correctAnswer) : q.correctAnswer,
+                    explanation: q.explanation || '',
+                    imageUrls: Array.isArray(q.imageUrls) ? q.imageUrls : [],
+                    // Pass through new mock‑test fields if they exist
+                    mockTestWeight: q.mockTestWeight !== undefined ? Number(q.mockTestWeight) : 1,
+                    isCoreConcept: !!q.isCoreConcept,
+                    difficulty: q.difficulty || 'easy',
+                    tags: Array.isArray(q.tags) ? q.tags : [],
+                };
+                // Only include questionNumber if a valid one is provided; otherwise let the backend assign one.
+                if (q.questionNumber && q.questionNumber >= 1) {
+                    item.questionNumber = Number(q.questionNumber);
+                }
+                return item;
+            });
             const { data } = await api.post('/admin/bulk-upload', payload);
             toast.success(`Upload complete: ${data.inserted ?? data.count} new, ${data.updated ?? 0} updated → ${branch} → ${subject}`);
+            setStoredChapters((previous) => [
+                ...new Set([...previous, ...bulkParsed.map((question) => question.chapter).filter(Boolean)]),
+            ]);
             setBulkJson('');
             setBulkParsed(null);
             setBulkErrors([]);
@@ -395,6 +478,8 @@ const AdminUpload = () => {
                         onSubjectChange={setSubject}
                         onChapterChange={setChapter}
                     />
+
+                    <PracticePaperImporter subject={subject} chapter={chapter} onImported={handleImportedQuestions} />
 
                     {/* Mode toggle */}
                     <div className="flex flex-col sm:flex-row gap-2">

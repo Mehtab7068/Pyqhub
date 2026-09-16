@@ -181,6 +181,9 @@ const QuestionViewer = ({
 
 const AnswerStatusIndicator = ({ questionType, answer, correctAnswer, hasOptions }) => {
     const isCorrect = useMemo(() => {
+        if (questionType === 'NAT') {
+            return Math.abs(Number(answer) - Number(correctAnswer)) < 1e-6;
+        }
         if (!hasOptions) return false;
 
         if (questionType === 'MSQ') {
@@ -205,8 +208,8 @@ const AnswerStatusIndicator = ({ questionType, answer, correctAnswer, hasOptions
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={`flex items-center gap-3 p-4 rounded-xl border ${isCorrect
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
-                    : 'bg-rose-500/10 border-rose-500/30'
+                ? 'bg-emerald-500/10 border-emerald-500/30'
+                : 'bg-rose-500/10 border-rose-500/30'
                 }`}
         >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'

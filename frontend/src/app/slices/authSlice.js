@@ -98,6 +98,20 @@ export const updateProfile = createAsyncThunk(
     }
 );
 
+export const uploadAvatar = createAsyncThunk(
+    'auth/uploadAvatar',
+    async (file, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const { data } = await api.post('/auth/avatar', formData);
+            return data.data.avatarUrl;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to upload profile image');
+        }
+    }
+);
+
 export const changePassword = createAsyncThunk(
     'auth/changePassword',
     async (passwordData, { rejectWithValue }) => {
@@ -234,6 +248,18 @@ const authSlice = createSlice({
                 state.user = action.payload.data.user;
             })
             .addCase(updateProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(uploadAvatar.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(uploadAvatar.fulfilled, (state, action) => {
+                state.loading = false;
+                if (state.user) state.user.avatarUrl = action.payload;
+            })
+            .addCase(uploadAvatar.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });
