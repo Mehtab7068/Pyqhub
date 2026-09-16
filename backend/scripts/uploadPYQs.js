@@ -34,8 +34,8 @@ function validateQuestion(q, index) {
         errors.push(`Index ${index}: questionType must be one of MCQ, MSQ, NAT`);
     }
 
-    if (q.marks && ![1, 2].includes(q.marks)) {
-        errors.push(`Index ${index}: marks must be 1 or 2`);
+    if (q.marks !== undefined && (!Number.isFinite(Number(q.marks)) || Number(q.marks) <= 0 || Number(q.marks) > 100)) {
+        errors.push(`Index ${index}: marks must be a number greater than 0 and at most 100`);
     }
 
     if (q.options && !Array.isArray(q.options)) {

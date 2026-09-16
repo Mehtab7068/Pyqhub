@@ -3,6 +3,12 @@ import { useSelector } from 'react-redux';
 
 const QuestionPalette = ({ questions, currentIndex, onSelectQuestion }) => {
     const { answers, submittedAnswers } = useSelector((state) => state.test);
+    const [palettePage, setPalettePage] = React.useState(0);
+    const pageSize = 25;
+
+    React.useEffect(() => {
+        setPalettePage(Math.floor(currentIndex / pageSize));
+    }, [currentIndex]);
 
     if (!questions || questions.length === 0) {
         return (
@@ -17,7 +23,20 @@ const QuestionPalette = ({ questions, currentIndex, onSelectQuestion }) => {
         const hasAnswer = answers[q._id] !== undefined && answers[q._id] !== '' &&
             !(Array.isArray(answers[q._id]) && answers[q._id].length === 0);
 
-        if (isSubmitted) return 'submitted';
+        if (isSubmitted) {
+            const answer = answers[q._id];
+            let isCorrect = false;
+            if (q.questionType === 'MSQ') {
+                const selected = Array.isArray(answer) ? [...answer].sort() : [];
+                const expected = Array.isArray(q.correctAnswer) ? [...q.correctAnswer].sort() : [];
+                isCorrect = JSON.stringify(selected) === JSON.stringify(expected);
+            } else if (q.questionType === 'NAT') {
+                isCorrect = Math.abs(Number(answer) - Number(q.correctAnswer)) < 1e-6;
+            } else {
+                isCorrect = String(answer) === String(q.correctAnswer);
+            }
+            return isCorrect ? 'submitted' : 'wrong';
+        }
         if (hasAnswer) return 'answered';
         return 'not-answered';
     };
@@ -32,6 +51,8 @@ const QuestionPalette = ({ questions, currentIndex, onSelectQuestion }) => {
         switch (status) {
             case 'submitted':
                 return `${baseStyles} bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30`;
+            case 'wrong':
+                return `${baseStyles} bg-rose-500/20 text-rose-400 border-rose-500/50 hover:bg-rose-500/30`;
             case 'answered':
                 return `${baseStyles} bg-amber-500/20 text-amber-400 border-amber-500/50 hover:bg-amber-500/30`;
             case 'not-answered':
@@ -44,7 +65,8 @@ const QuestionPalette = ({ questions, currentIndex, onSelectQuestion }) => {
         <div className="glass-card p-4">
             <h3 className="text-sm font-semibold text-slate-300 mb-3">Questions</h3>
             <div className="grid grid-cols-5 gap-2">
-                {questions.map((q, idx) => {
+                {questions.slice(palettePage * pageSize, (palettePage + 1) * pageSize).map((q, pageIndex) => {
+                    const idx = palettePage * pageSize + pageIndex;
                     const status = getQuestionStatus(q);
                     const isCurrent = idx === currentIndex;
                     return (
@@ -52,17 +74,44 @@ const QuestionPalette = ({ questions, currentIndex, onSelectQuestion }) => {
                             key={q._id}
                             onClick={() => onSelectQuestion(idx)}
                             className={getStatusStyles(status, isCurrent)}
-                            title={status === 'submitted' ? 'Submitted' : status === 'answered' ? 'Answered (not submitted)' : 'Not answered'}
+                            title={status === 'submitted' ? 'Correct' : status === 'wrong' ? 'Incorrect' : status === 'answered' ? 'Answered (not submitted)' : 'Not answered'}
                         >
                             {idx + 1}
                         </button>
                     );
                 })}
             </div>
+            {questions.length > pageSize && (
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+                    <button
+                        type="button"
+                        onClick={() => setPalettePage((page) => Math.max(0, page - 1))}
+                        disabled={palettePage === 0}
+                        className="btn-ghost text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        ← Previous
+                    </button>
+                    <span className="text-xs text-slate-400">
+                        {palettePage + 1} / {Math.ceil(questions.length / pageSize)}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setPalettePage((page) => Math.min(Math.ceil(questions.length / pageSize) - 1, page + 1))}
+                        disabled={palettePage >= Math.ceil(questions.length / pageSize) - 1}
+                        className="btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        Next →
+                    </button>
+                </div>
+            )}
             <div className="mt-3 pt-3 border-t border-white/10 space-y-1">
                 <div className="flex items-center gap-2 text-xs">
                     <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/50"></div>
-                    <span className="text-slate-400">Submitted</span>
+                    <span className="text-slate-400">Correct</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                    <div className="w-3 h-3 rounded bg-rose-500/20 border border-rose-500/50"></div>
+                    <span className="text-slate-400">Incorrect</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                     <div className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/50"></div>

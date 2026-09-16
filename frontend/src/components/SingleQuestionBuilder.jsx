@@ -31,14 +31,14 @@ const SingleQuestionBuilder = ({ current, onUpdate, onOptionUpdate, onToggleMsq,
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Question Number</label>
+                    <label className="block text-sm font-medium text-slate-300 mb-1">Question Number (optional)</label>
                     <input
                         type="number"
-                        value={current.questionNumber}
-                        onChange={(e) => onUpdate('questionNumber', Number(e.target.value))}
+                        value={current.questionNumber !== undefined ? current.questionNumber : ''}
+                        onChange={(e) => onUpdate('questionNumber', e.target.value === '' ? undefined : Number(e.target.value))}
                         min="1"
                         className="input-dark min-h-11"
-                        placeholder="e.g. 1"
+                        placeholder="e.g. 1 (leave blank for auto-assign)"
                     />
                 </div>
             </div>

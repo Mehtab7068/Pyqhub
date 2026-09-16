@@ -275,6 +275,34 @@ export const EXAM_DATA = {
             ],
         },
     },
+    JEE_MAINS: {
+        label: 'JEE Main',
+        branches: {
+            'Engineering': [
+                'Physics',
+                'Chemistry',
+                'Mathematics',
+            ],
+        },
+    },
+    SSC_CGL: {
+        label: 'SSC CGL',
+        branches: {
+            'Tier 1': [
+                'General Intelligence & Reasoning',
+                'General Awareness',
+                'Quantitative Aptitude',
+                'English Comprehension',
+            ],
+            'Tier 2': [
+                'Mathematical Abilities',
+                'Reasoning & General Intelligence',
+                'English Language & Comprehension',
+                'General Awareness',
+                'Computer Knowledge',
+            ],
+        },
+    },
     UPSC: {
         label: 'UPSC CSE',
         branches: {
@@ -307,15 +335,24 @@ export const SUBJECT_CHAPTERS = {
     'General Aptitude': [
         'Numerical Ability',
         'Reasoning Ability',
-        'Verbal Aptitude',
+        'Verbal Ability',
         'Spatial Aptitude',
     ],
     'Engineering Mathematics & Discrete Mathematics': [
         'Linear Algebra',
         'Calculus',
-        'Probability & Statistics',
-        'Discrete Mathematics',
+        'Numerical Method',
+        'Propositional Logic',
+        'Set Theory',
+        'Relation',
+        'Functions',
+        'Lattice',
+        'Group Theory',
         'Graph Theory',
+        'Planar Graph',
+        'Combination',
+        'Probability Theory',
+        'Recurrence',
     ],
     'Digital Logic': [
         'Boolean Algebra',
@@ -325,21 +362,21 @@ export const SUBJECT_CHAPTERS = {
         'Number Systems',
     ],
     'Computer Organization & Architecture': [
-        'Machine Instructions',
-        'Addressing Mode',
+        'Machine Instruction',
+        'Addressing Modes',
         'Interrupt',
-        'Pipline Processor',
+        'Pipeline Processor',
         'Cache Memory',
-        'Secondary storage',
+        'Secondary Storage',
         'ALU Data Path and Control Unit',
         'Memory Chip Design',
-        'I/O Organization',
+        'IO Interface',
     ],
     'Programming & Data Structures': [
-        'Arrays / Strings',
-        'Linked Lists',
-        'Stacks ' ,
-        'Queues ',
+        'Array',
+        'Link List',
+        'Stack',
+        'Queue',
         'Binary Tree',
         'Binary Search Tree',
         'AVL Tree',
@@ -350,50 +387,66 @@ export const SUBJECT_CHAPTERS = {
         'Hashing',
     ],
     'Algorithms': [
-        'Searching / Sorting',
-        'Greedy Algorithms',
-        'Dynamic Programming',
+        'Asymptotic Notation',
+        'Recurrence Relation',
         'Divide and Conquer',
-        'Graph Algorithms',
+        'Sorting',
+        'Greedy Technique',
+        'Minimum Spanning Tree',
+        'Shortest Path',
+        'Graph Traversal',
+        'Dynamic Programming',
     ],
     'Theory of Computation (TOC)': [
-        'Regular Languages',
-        'Context Free Languages',
-        'Turing Machines',
-        'Decidability',
+        'Regular Expression',
+        'Regular Grammar',
+        'Regular Language',
+        'Finite Automata',
+        'Context Free Grammar',
+        'Context Free Language',
+        'Push-down Automata',
+        'Recursive Language',
+        'Turing Machine',
+        'Undecidability',
     ],
     'Compiler Design': [
         'Lexical Analysis',
         'Parsing',
-        'Syntax Directed Translation',
-        'Code Generation',
+        'Syntax-directed Translation',
+        'Intermediate Code Generation',
+        'Runtime Environment',
+        'Matching',
     ],
     'Operating Systems': [
-        'Process Management',
+        'Process',
         'CPU Scheduling',
+        'Process Synchronization',
+        'Deadlock',
         'Memory Management',
         'File Systems',
-        'Deadlocks',
+        'Disk Scheduling',
+        'System Call',
+        'Thread',
     ],
     'Database Management Systems (DBMS)': [
         'ER Model',
-        'Relational Model',
+        'Relational Schema',
         'Relational Algebra',
         'Normal Form',
+        'Transactions',
         'Integrity Constraints',
         'SQL',
         'Tuple Calculus',
-        'Transactions / Concurrency',
-        'File System'
+        'File System',
     ],
     'Computer Networks': [
-        'OSI / TCP-IP',
+        'OSI Layer',
         'Physical Layer',
         'Data Link Layer',
-        'Network Layer',
-        'Transport Layer',
-        'Application Layer',
-        'Network Security'
+        'Network Layer Protocol',
+        'Transport Layer Protocol',
+        'Application Layer Protocols',
+        'Network Security',
     ],
     'Linear Algebra & Calculus': [
         'Matrices',
@@ -1350,5 +1403,16 @@ export const SUBJECT_CHAPTERS = {
         'Current Affairs Essays',
     ],
 };
+
+// Canonical subject names used by the PracticePaper importer and uploaded JSON.
+SUBJECT_CHAPTERS['Data Structure'] = SUBJECT_CHAPTERS['Programming & Data Structures'];
+SUBJECT_CHAPTERS['Theory of Computation'] = SUBJECT_CHAPTERS['Theory of Computation (TOC)'];
+SUBJECT_CHAPTERS['Operating System'] = SUBJECT_CHAPTERS['Operating Systems'];
+SUBJECT_CHAPTERS['Computer Network'] = SUBJECT_CHAPTERS['Computer Networks'];
+SUBJECT_CHAPTERS['Computer Organization'] = SUBJECT_CHAPTERS['Computer Organization & Architecture'];
+SUBJECT_CHAPTERS['Database Management System'] = SUBJECT_CHAPTERS['Database Management Systems (DBMS)'];
+SUBJECT_CHAPTERS['Engineering Mathematics'] = ['Linear Algebra', 'Calculus', 'Numerical Method'];
+SUBJECT_CHAPTERS['Discrete Mathematics'] = ['Propositional Logic', 'Set Theory', 'Relation', 'Functions', 'Lattice', 'Group Theory', 'Graph Theory', 'Planar Graph', 'Combination', 'Probability Theory', 'Recurrence'];
+SUBJECT_CHAPTERS['C Programming'] = ['Arithmetic Operation', 'Conditional Statement', 'Loops', 'Array and Pointer', 'Function'];
 
 export const getChaptersForSubject = (subject) => SUBJECT_CHAPTERS[subject] || [];

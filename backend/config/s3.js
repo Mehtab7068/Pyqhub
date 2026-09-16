@@ -29,6 +29,10 @@ export const getKeyFromS3Url = (url) => {
 };
 
 export const getSignedS3Url = async (urlOrKey) => {
+    // Imported PracticePaper images are already public URLs; only sign our own S3 objects.
+    if (typeof urlOrKey === 'string' && /^https?:\/\/(?!.*\.s3\.)/i.test(urlOrKey)) {
+        return urlOrKey;
+    }
     const key = getKeyFromS3Url(urlOrKey);
     const command = new GetObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET,

@@ -20,10 +20,8 @@ const questionSchema = new mongoose.Schema(
         },
         marks: {
             type: Number,
-            enum: {
-                values: [1, 2],
-                message: '{VALUE} is not a valid marks value',
-            },
+            min: [0.1, 'Marks must be greater than zero'],
+            max: [100, 'Marks value is too large'],
             required: [true, 'Marks is required'],
         },
         questionText: {
@@ -59,6 +57,11 @@ const questionSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        topic: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         imageUrls: {
             type: [String],
             default: [],
@@ -67,6 +70,29 @@ const questionSchema = new mongoose.Schema(
             type: Number,
             min: [2000, 'Year seems invalid'],
             max: [2100, 'Year seems invalid'],
+        },
+        // Mock test specific fields
+        mockTestWeight: {
+            type: Number,
+            default: 1,
+            min: [1, 'Weight must be at least 1'],
+            max: [5, 'Weight cannot exceed 5'],
+        },
+        isCoreConcept: {
+            type: Boolean,
+            default: false,
+        },
+        difficulty: {
+            type: String,
+            enum: {
+                values: ['easy', 'medium', 'hard'],
+                message: '{VALUE} is not a valid difficulty',
+            },
+            default: 'medium',
+        },
+        tags: {
+            type: [String],
+            default: [],
         },
     }
 );

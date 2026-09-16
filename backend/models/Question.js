@@ -48,10 +48,8 @@ const questionSchema = new mongoose.Schema(
         },
         marks: {
             type: Number,
-            enum: {
-                values: [1, 2],
-                message: '{VALUE} is not a valid marks value',
-            },
+            min: [0.1, 'Marks must be greater than zero'],
+            max: [100, 'Marks value is too large'],
             required: [true, 'Marks is required'],
         },
         questionText: {

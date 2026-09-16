@@ -3,6 +3,19 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import { authenticateUser } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
+import { uploadToS3, getSignedS3Url } from '../config/s3.js';
+import { securityAudit } from '../middleware/security.js';
+import {
+    registerValidation,
+    loginValidation,
+    forgotPasswordValidation,
+    resetPasswordValidation,
+    changePasswordValidation,
+    updateProfileValidation,
+    adminRegisterValidation,
+    handleValidationErrors
+} from '../middleware/validation.js';
 
 const router = express.Router();
 
@@ -186,15 +199,16 @@ const getMe = async (req, res) => {
             });
         }
 
+        const userData = user.toObject();
+        delete userData.password;
+        delete userData.resetPasswordToken;
+        delete userData.resetPasswordExpire;
+        if (userData.avatarUrl) userData.avatarUrl = await getSignedS3Url(userData.avatarUrl);
+
         res.status(200).json({
             success: true,
             data: {
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                },
+                user: { ...userData, id: user._id },
             },
         });
     } catch (error) {
@@ -203,6 +217,27 @@ const getMe = async (req, res) => {
             success: false,
             message: error.message || 'Server error',
         });
+    }
+};
+
+const uploadAvatar = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: 'Please select an image' });
+
+        const ext = req.file.originalname.split('.').pop() || 'png';
+        const key = `avatars/${req.user.userId}-${Date.now()}.${ext}`;
+        const avatarUrl = await uploadToS3(req.file.buffer, key, req.file.mimetype);
+        const user = await User.findByIdAndUpdate(req.user.userId, { avatarUrl }, { new: true });
+        const signedAvatarUrl = await getSignedS3Url(user.avatarUrl);
+
+        res.status(201).json({
+            success: true,
+            message: 'Profile image updated successfully',
+            data: { avatarUrl: signedAvatarUrl },
+        });
+    } catch (error) {
+        console.error('Avatar upload error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Failed to upload profile image' });
     }
 };
 
@@ -530,14 +565,15 @@ const changePassword = async (req, res) => {
     }
 };
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', authenticateUser, logout);
+router.post('/register', registerValidation, handleValidationErrors, securityAudit('user_registration'), register);
+router.post('/login', loginValidation, handleValidationErrors, securityAudit('user_login'), login);
+router.post('/logout', authenticateUser, securityAudit('user_logout'), logout);
 router.get('/me', authenticateUser, getMe);
-router.put('/update-profile', authenticateUser, updateProfile);
-router.put('/change-password', authenticateUser, changePassword);
-router.post('/admin-register', adminRegister);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/avatar', authenticateUser, upload.single('avatar'), securityAudit('avatar_upload'), uploadAvatar);
+router.put('/update-profile', updateProfileValidation, handleValidationErrors, authenticateUser, securityAudit('profile_update'), updateProfile);
+router.put('/change-password', changePasswordValidation, handleValidationErrors, authenticateUser, securityAudit('password_change'), changePassword);
+router.post('/admin-register', adminRegisterValidation, handleValidationErrors, securityAudit('admin_registration'), adminRegister);
+router.post('/forgot-password', forgotPasswordValidation, handleValidationErrors, securityAudit('password_reset_request'), forgotPassword);
+router.post('/reset-password', resetPasswordValidation, handleValidationErrors, securityAudit('password_reset'), resetPassword);
 
 export default router;

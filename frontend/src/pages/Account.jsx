@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Navbar from '../components/Navbar';
+import { EXAM_DATA } from '../data/gateData';
 
 const InfoRow = ({ label, value }) => (
     <div className="flex flex-col sm:flex-row sm:items-center py-3 border-b border-white/5 last:border-0">
@@ -16,6 +17,10 @@ const Account = () => {
     const { user } = useSelector((state) => state.auth);
 
     const initial = user?.name?.[0]?.toUpperCase() || 'U';
+    const examLabel = EXAM_DATA[user?.targetExam]?.label || user?.targetExam;
+    const profileFields = ['name', 'phone', 'targetExam', 'targetYear', 'branch', 'college', 'bio'];
+    const completedFields = profileFields.filter((field) => String(user?.[field] || '').trim()).length;
+    const profileCompletion = Math.round((completedFields / profileFields.length) * 100);
     const joinedDate = user?.createdAt
         ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         : null;
@@ -27,8 +32,8 @@ const Account = () => {
                 {/* Profile header card */}
                 <div className="glass-card p-6 sm:p-8 animate-fade-up">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-neon-cyan to-blue-500 flex items-center justify-center text-3xl font-extrabold text-gray-900 shadow-lg shadow-neon-cyan/30 shrink-0">
-                            {initial}
+                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-neon-cyan to-blue-500 flex items-center justify-center text-3xl font-extrabold text-gray-900 shadow-lg shadow-neon-cyan/30 shrink-0">
+                            {user?.avatarUrl ? <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" /> : initial}
                         </div>
                         <div className="text-center sm:text-left flex-1">
                             <h1 className="text-2xl font-extrabold text-slate-100">{user?.name || 'User'}</h1>
@@ -58,12 +63,32 @@ const Account = () => {
                     {user?.bio && (
                         <p className="text-sm text-slate-300 mt-5 pt-5 border-t border-white/10">{user.bio}</p>
                     )}
+                    <div className="mt-6 pt-5 border-t border-white/10">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="text-slate-300">Profile completeness</span>
+                            <span className="text-neon-cyan font-semibold">{profileCompletion}%</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                            <div className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-blue-500 transition-all" style={{ width: `${profileCompletion}%` }} />
+                        </div>
+                        {profileCompletion < 100 && (
+                            <p className="text-xs text-slate-500 mt-2">Complete your profile to make your preparation dashboard more useful.</p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="glass-card p-6 sm:p-8 mt-6 animate-fade-up flex items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-100">Performance Lab</h2>
+                        <p className="text-sm text-slate-400 mt-1">Review attempts, weak topics, and mistake patterns.</p>
+                    </div>
+                    <Link to="/progress" className="btn-primary text-sm px-5 py-2 shrink-0">View Progress</Link>
                 </div>
 
                 {/* Exam preparation details */}
                 <div className="glass-card p-6 sm:p-8 mt-6 animate-fade-up">
                     <h2 className="text-lg font-bold text-slate-100 mb-2">Exam Preparation</h2>
-                    <InfoRow label="Target Exam" value={user?.targetExam} />
+                    <InfoRow label="Target Exam" value={examLabel} />
                     <InfoRow label="Target Year" value={user?.targetYear} />
                     <InfoRow label="Branch / Stream" value={user?.branch} />
                 </div>

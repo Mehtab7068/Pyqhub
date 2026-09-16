@@ -16,9 +16,9 @@ export const fetchBranches = createAsyncThunk(
 
 export const fetchSubjects = createAsyncThunk(
     'filter/fetchSubjects',
-    async (branch, { rejectWithValue }) => {
+    async ({ branch, exam }, { rejectWithValue }) => {
         try {
-            const { data } = await api.get('/subjects', { params: { branch } });
+            const { data } = await api.get('/subjects', { params: { branch, exam } });
             return { branch, subjects: data.data };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch subjects');
@@ -39,11 +39,12 @@ export const fetchChapters = createAsyncThunk(
 );
 
 const initialState = {
-    exam: 'GATE',
+    exam: '',
     branch: '',
     subject: '',
     mode: 'subject', // 'subject' (whole subject) | 'chapter' (chapterwise)
     chapter: '',
+    mockTestType: '', // 'full' | 'subject' | 'chapter' | 'previous'
     branches: [],
     subjects: [],
     chapters: [],
@@ -65,6 +66,7 @@ const filterSlice = createSlice({
             state.subject = '';
             state.mode = 'subject';
             state.chapter = '';
+            state.mockTestType = '';
             state.subjects = [];
             state.chapters = [];
         },
@@ -73,6 +75,7 @@ const filterSlice = createSlice({
             state.subject = '';
             state.mode = 'subject';
             state.chapter = '';
+            state.mockTestType = '';
             state.subjects = [];
             state.chapters = [];
         },
@@ -80,6 +83,7 @@ const filterSlice = createSlice({
             state.subject = action.payload;
             state.mode = 'subject';
             state.chapter = '';
+            state.mockTestType = '';
             state.chapters = [];
         },
         setMode(state, action) {
@@ -89,11 +93,15 @@ const filterSlice = createSlice({
         setChapter(state, action) {
             state.chapter = action.payload;
         },
+        setMockTestType(state, action) {
+            state.mockTestType = action.payload;
+        },
         clearFilters(state) {
             state.branch = '';
             state.subject = '';
             state.mode = 'subject';
             state.chapter = '';
+            state.mockTestType = '';
             state.subjects = [];
             state.chapters = [];
         },
@@ -147,6 +155,6 @@ const filterSlice = createSlice({
     },
 });
 
-export const { setExam, setBranch, setSubject, setMode, setChapter, clearFilters } = filterSlice.actions;
+export const { setExam, setBranch, setSubject, setMode, setChapter, setMockTestType, clearFilters } = filterSlice.actions;
 
 export default filterSlice.reducer;

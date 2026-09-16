@@ -11,53 +11,68 @@ const BulkUploadSection = ({
     onLoadTemplate,
     onFileUpload,
 }) => {
+    // Template for bulk JSON upload. Includes optional mock‑test fields.
     const BULK_TEMPLATE = `[
-  {
-    "questionType": "MCQ",
-    "questionNumber": 1,
-    "marks": 1,
-    "questionText": "The value of $\\\\int_0^1 x^2\\\\,dx$ is",
-    "chapter": "Calculus",
-    "yearTag": "2024",
-    "options": [
-      { "id": "A", "text": "$1/3$" },
-      { "id": "B", "text": "$1/2$" },
-      { "id": "C", "text": "$1$" },
-      { "id": "D", "text": "$2/3$" }
-    ],
-    "correctAnswer": "A",
-    "explanation": "Power rule: $x^3/3$ from 0 to 1 $= 1/3$.",
-    "imageUrls": []
-  },
-  {
-    "questionType": "MSQ",
-    "questionNumber": 2,
-    "marks": 2,
-    "questionText": "Which of the following are prime numbers?",
-    "chapter": "Number Theory",
-    "yearTag": "2023",
-    "options": [
-      { "id": "A", "text": "2" },
-      { "id": "B", "text": "4" },
-      { "id": "C", "text": "7" },
-      { "id": "D", "text": "9" }
-    ],
-    "correctAnswer": ["A", "C"],
-    "explanation": "",
-    "imageUrls": []
-  },
-  {
-    "questionType": "NAT",
-    "questionNumber": 3,
-    "marks": 1,
-    "questionText": "How many bits are in one byte?",
-    "chapter": "Computer Fundamentals",
-    "yearTag": "2022",
-    "options": [],
-    "correctAnswer": 8,
-    "explanation": "",
-    "imageUrls": []
-  }
+    {
+        "questionType": "MCQ",
+        // "questionNumber": 1,  // Optional – omit for auto‑assign
+        "marks": 1,
+        "questionText": "The value of $\\int_0^1 x^2\\,dx$ is",
+        "chapter": "Calculus",
+        "topic": "Integration",
+        "yearTag": "2024",
+        "options": [
+            { "id": "A", "text": "$1/3$" },
+            { "id": "B", "text": "$1/2$" },
+            { "id": "C", "text": "$1$" },
+            { "id": "D", "text": "$2/3$" }
+        ],
+        "correctAnswer": "A",
+        "explanation": "Power rule: $x^3/3$ from 0 to 1 $= 1/3$.",
+        "imageUrls": [],
+        // Mock‑test specific optional fields (default values will be used if omitted)
+        "mockTestWeight": 1,
+        "isCoreConcept": false,
+        "difficulty": "easy",
+        "tags": []
+    },
+    {
+        "questionType": "MSQ",
+        // "questionNumber": 2,  // Optional – omit for auto‑assign
+        "marks": 2,
+        "questionText": "Which of the following are prime numbers?",
+        "chapter": "Number Theory",
+        "yearTag": "2023",
+        "options": [
+            { "id": "A", "text": "2" },
+            { "id": "B", "text": "4" },
+            { "id": "C", "text": "7" },
+            { "id": "D", "text": "9" }
+        ],
+        "correctAnswer": ["A", "C"],
+        "explanation": "",
+        "imageUrls": [],
+        "mockTestWeight": 1,
+        "isCoreConcept": false,
+        "difficulty": "easy",
+        "tags": []
+    },
+    {
+        "questionType": "NAT",
+        // "questionNumber": 3,  // Optional – omit for auto‑assign
+        "marks": 1,
+        "questionText": "How many bits are in one byte?",
+        "chapter": "Computer Fundamentals",
+        "yearTag": "2022",
+        "options": [],
+        "correctAnswer": 8,
+        "explanation": "",
+        "imageUrls": [],
+        "mockTestWeight": 1,
+        "isCoreConcept": false,
+        "difficulty": "easy",
+        "tags": []
+    }
 ]`;
 
     return (

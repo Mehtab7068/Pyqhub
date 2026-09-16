@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const QuestionImages = ({ imageUrls, apiOrigin, imageErrors, onImageError }) => {
     const [expandedImage, setExpandedImage] = useState(null);

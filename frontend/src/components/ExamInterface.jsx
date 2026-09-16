@@ -3,22 +3,32 @@ import { useDispatch, useSelector } from 'react-redux';
 import FilterSelection from './FilterSelection';
 import ResultsScreen from './ResultsScreen';
 import TestScreen from './TestScreen';
+import MockTestScreen from './mockTest/MockTestScreen';
 import NoQuestionsPage from './NoQuestionsPage';
-import { setCurrentIndex, setAnswer, toggleMarkForReview, setTimeRemaining, submitTest, resetTest } from '../app/slices/testSlice';
-import { setBranch, setSubject, setMode, setChapter, setExam } from '../app/slices/filterSlice';
-import { fetchQuestions } from '../app/slices/testSlice';
+import { setCurrentIndex, setAnswer, toggleMarkForReview, setTimeRemaining, setTestExam, submitTest, resetTest, setMockTestConfig } from '../app/slices/testSlice';
+import { setBranch, setSubject, setMode, setChapter, setExam, setMockTestType, fetchChapters } from '../app/slices/filterSlice';
+import { fetchQuestions, fetchMockTestQuestions } from '../app/slices/testSlice';
 import { getBranchesForExam, getSubjectsForBranch, getChaptersForSubject } from '../data/gateData';
 import toast from 'react-hot-toast';
+import { getExamConfig } from '../data/examConfig';
 
 const ExamInterface = () => {
     const dispatch = useDispatch();
-    const { exam, branch, subject, mode, chapter } = useSelector((state) => state.filter);
-    const { questions, currentIndex, answers, markedForReview, timeRemaining, isSubmitted, score, testConfig, loading: testLoading, error, noQuestionsFound } = useSelector((state) => state.test);
+    const { exam, branch, subject, mode, chapter, mockTestType, chapters: storedChapters } = useSelector((state) => state.filter);
+    const { questions, currentIndex, answers, markedForReview, timeRemaining, isSubmitted, testLoading, mockTestConfig } = useSelector((state) => state.test);
 
     // Static cascading data (exam-aware)
     const branches = getBranchesForExam(exam);
     const subjects = branch ? getSubjectsForBranch(exam, branch) : [];
-    const chapters = subject ? getChaptersForSubject(subject) : [];
+    const chapters = [...new Set([...(subject ? getChaptersForSubject(subject) : []), ...(storedChapters || [])])];
+
+    useEffect(() => {
+        if (exam && branch && subject) dispatch(fetchChapters({ exam, branch, subject }));
+    }, [exam, branch, subject, dispatch]);
+
+    useEffect(() => {
+        dispatch(setTestExam(exam));
+    }, [exam, dispatch]);
 
     // Cascading handlers: changing a parent resets its children
     const handleBranchChange = (e) => {
@@ -51,69 +61,44 @@ const ExamInterface = () => {
         dispatch(setChapter(e.target.value));
     };
 
-    // Timer effect — runs while practice is active (not submitted) and time remains
-    useEffect(() => {
-        if (isSubmitted || questions.length === 0 || timeRemaining <= 0) return;
-
-        const timer = setInterval(() => {
-            dispatch(setTimeRemaining(timeRemaining - 1));
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [timeRemaining, isSubmitted, questions.length, dispatch]);
-
-    // Auto-submit when time runs out
-    useEffect(() => {
-        if (timeRemaining === 0 && !isSubmitted && questions.length > 0) {
-            dispatch(submitTest());
-        }
-    }, [timeRemaining, isSubmitted, questions.length, dispatch]);
+    const handleMockTestTypeChange = (e) => {
+        dispatch(setMockTestType(e.target.value));
+    };
 
     const handleStartTest = useCallback(() => {
         if (!branch || !subject) return;
         if (mode === 'chapter' && !chapter) return;
         dispatch(fetchQuestions({ exam, branch, subject, chapter: mode === 'chapter' ? chapter : undefined }));
-        dispatch(setTimeRemaining(testConfig.durationMinutes * 60));
-    }, [exam, branch, subject, mode, chapter, dispatch, testConfig.durationMinutes]);
+        dispatch(setTimeRemaining(getExamConfig(exam).durations.subject * 60));
+    }, [exam, branch, subject, mode, chapter, dispatch]);
 
-    const handleAnswerChange = useCallback((answer) => {
-        const currentQuestion = questions[currentIndex];
-        if (currentQuestion) {
-            dispatch(setAnswer({ questionId: currentQuestion._id, answer }));
-        }
-    }, [currentIndex, questions, dispatch]);
+    const handleStartMockTest = useCallback(() => {
+        if (!branch || !subject || !mockTestType) return;
+        dispatch(fetchMockTestQuestions({ exam, branch, subject, mockTestType, chapter: mockTestType === 'chapter' ? chapter : undefined }));
+        // Set timer based on mock test type
+        const durations = getExamConfig(exam).durations;
+        dispatch(setMockTestConfig({ durationMinutes: durations[mockTestType] || 180 }));
+        dispatch(setTimeRemaining((durations[mockTestType] || 180) * 60));
+    }, [exam, branch, subject, mockTestType, chapter, dispatch]);
 
-    const handleSubmit = useCallback(() => {
-        if (window.confirm('Are you sure you want to submit the practice? This action cannot be undone.')) {
-            dispatch(submitTest());
-            toast.success('Practice submitted successfully!');
-        }
-    }, [dispatch]);
-
-    const handleReset = useCallback(() => {
-        if (window.confirm('Are you sure you want to reset the practice? All progress will be lost.')) {
-            dispatch(resetTest());
-            dispatch(setBranch(''));
-            dispatch(setSubject(''));
-        }
-    }, [dispatch]);
-
-    const formatTime = (seconds) => {
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    // Back button handler to reset test state when returning to filter selection
+    const handleBackToExam = () => {
+        dispatch(resetTest());
     };
 
     // No questions found screen - show when backend indicates no questions available for this subject/chapter
-    if (noQuestionsFound && questions.length === 0 && !isSubmitted) {
+    if (mockTestConfig.noQuestionsFound && questions.length === 0 && !isSubmitted) {
         return (
             <NoQuestionsPage
                 exam={exam}
                 branch={branch}
                 subject={subject}
                 chapter={chapter}
-                onReset={handleReset}
+                onReset={() => {
+                    dispatch(setBranch(''));
+                    dispatch(setSubject(''));
+                    dispatch(setMockTestType(''));
+                }}
             />
         );
     }
@@ -134,10 +119,17 @@ const ExamInterface = () => {
                 onSubjectChange={handleSubjectChange}
                 onModeChange={handleModeChange}
                 onChapterChange={handleChapterChange}
-                onExamChange={handleExamChange}
                 onStartTest={handleStartTest}
+                onExamChange={handleExamChange}
                 testLoading={testLoading}
-                error={error}
+                error={mockTestConfig.error}
+                // Mock test props
+                mockTestType={mockTestType}
+                onMockTestTypeChange={handleMockTestTypeChange}
+                onStartMockTest={handleStartMockTest}
+                mockTestLoading={testLoading}
+                mockTestError={mockTestConfig.error}
+                onBackToExam={handleBackToExam}
             />
         );
     }
@@ -147,8 +139,9 @@ const ExamInterface = () => {
         return <ResultsScreen />;
     }
 
-    // Active test screen
-    return <TestScreen />;
+    // Active test screen - determine if it's mock test or regular practice
+    const isMockTest = mockTestType && mockTestType !== '';
+    return isMockTest ? <MockTestScreen /> : <TestScreen />;
 };
 
 export default ExamInterface;
