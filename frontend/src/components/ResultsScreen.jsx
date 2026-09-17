@@ -81,7 +81,7 @@ const ResultsScreen = () => {
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="glass-card p-4 text-center">
                             <p className="text-sm text-slate-400">Score</p>
-                            <p className="text-3xl font-bold text-neon-cyan">{score} / {testConfig.totalMarks}</p>
+                            <p className="text-3xl font-bold text-neon-cyan">{Number(score).toFixed(2)} / {testConfig.totalMarks}</p>
                         </div>
                         <div className="glass-card p-4 text-center">
                             <p className="text-sm text-slate-400">Percentage</p>

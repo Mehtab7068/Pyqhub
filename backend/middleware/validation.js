@@ -172,7 +172,14 @@ export const questionFilterValidation = [
         .isLength({ max: 100 }),
     query('year')
         .optional()
-        .isInt({ min: 2000, max: 2100 })
+        .custom((value) => {
+            if (value === 'all') return true;
+            const year = Number(value);
+            if (isNaN(year) || year < 2000 || year > 2100) {
+                throw new Error('Invalid year');
+            }
+            return true;
+        })
         .withMessage('Invalid year'),
     query('chapter')
         .optional()

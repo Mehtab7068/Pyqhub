@@ -75,7 +75,7 @@ const Leaderboard = () => {
                                             <td className="p-4 font-bold text-amber-300">#{row.rank}</td>
                                             <td className="p-4 text-slate-100 font-medium">{row.name}</td>
                                             <td className="p-4 text-slate-400">{row.branch || 'All branches'}</td>
-                                            <td className="p-4 text-neon-cyan font-bold">{Math.round(row.percentage)}% <span className="text-xs text-slate-500 font-normal">({row.score}/{row.totalMarks})</span></td>
+                                            <td className="p-4 text-neon-cyan font-bold">{Math.round(row.percentage)}% <span className="text-xs text-slate-500 font-normal">({Number(row.score).toFixed(2)}/{row.totalMarks})</span></td>
                                             <td className="p-4 text-slate-400">{row.attempts}</td>
                                         </tr>
                                     ))}

@@ -160,7 +160,7 @@ const Progress = () => {
                                                 <td className="py-3 pr-4 text-slate-400">{new Date(attempt.submittedAt).toLocaleDateString()}</td>
                                                 <td className="py-3 pr-4 text-slate-200">{attempt.mode === 'mock' ? 'Mock test' : 'Practice'}</td>
                                                 <td className="py-3 pr-4 text-slate-300">{attempt.subject || 'Mixed'}{attempt.chapter ? ` / ${attempt.chapter}` : ''}</td>
-                                                <td className="py-3 text-neon-cyan font-semibold">{attempt.score} / {attempt.totalMarks}</td>
+                                                <td className="py-3 text-neon-cyan font-semibold">{Number(attempt.score).toFixed(2)} / {attempt.totalMarks}</td>
                                             </tr>
                                         ))}
                                     </tbody>
