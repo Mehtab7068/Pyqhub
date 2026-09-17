@@ -82,10 +82,10 @@ app.use('/api/v1/auth/reset-password', passwordResetLimiter);
 app.use('/api/v1/auth', authRoutes);
 
 app.use('/api/v1/attempts', attemptRoutes);
-app.use('/api/v1/questions/report', reportLimiter);
-app.use('/api/v1/questions', questionReportRoutes);
 app.use('/api/v1/admin/upload', uploadLimiter);
 app.use('/api/v1', questionRoutes);
+app.use('/api/v1/questions/report', reportLimiter);
+app.use('/api/v1/questions', questionReportRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

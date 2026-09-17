@@ -27,7 +27,7 @@ router.get('/subjects', getSubjects);
 router.get('/years', getYears);
 router.get('/chapters', getChapters);
 router.get('/questions/by-ids', getQuestionsByIds);
-router.get('/questions', questionFilterValidation, paginationValidation, handleValidationErrors, getQuestions);
+router.get('/questions', questionFilterValidation, handleValidationErrors, getQuestions);
 router.get('/mock-test/questions', questionFilterValidation, paginationValidation, handleValidationErrors, getMockTestQuestions);
 
 // Protected admin routes

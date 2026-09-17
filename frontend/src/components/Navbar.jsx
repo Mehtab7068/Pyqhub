@@ -13,6 +13,7 @@ const Navbar = ({ isTestInProgress = false }) => {
     const { isAuthenticated, user } = useSelector((state) => state.auth);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const [profileMenuTimeout, setProfileMenuTimeout] = useState(null);
 
     const handleLogout = async () => {
         await dispatch(logoutUser());
@@ -35,6 +36,20 @@ const Navbar = ({ isTestInProgress = false }) => {
 
     const navLinkClass = (path) =>
         `text-sm font-medium transition-colors duration-200 ${location.pathname === path || location.pathname.startsWith(path + '/') ? 'text-neon-cyan' : 'text-slate-300 hover:text-neon-cyan'}`;
+
+    const openProfileMenu = () => {
+        if (profileMenuTimeout) clearTimeout(profileMenuTimeout);
+        setProfileMenuOpen(true);
+    };
+
+    const closeProfileMenu = () => {
+        const timeout = setTimeout(() => setProfileMenuOpen(false), 150);
+        setProfileMenuTimeout(timeout);
+    };
+
+    const keepProfileMenuOpen = () => {
+        if (profileMenuTimeout) clearTimeout(profileMenuTimeout);
+    };
 
     return (
         <nav className="glass-panel sticky top-0 z-50">
@@ -72,11 +87,7 @@ const Navbar = ({ isTestInProgress = false }) => {
                             </span>
                         )}
                         {isAuthenticated ? (
-                            <div
-                                className="relative"
-                                onMouseEnter={() => setProfileMenuOpen(true)}
-                                onMouseLeave={() => setProfileMenuOpen(false)}
-                            >
+                            <div className="relative" onMouseEnter={openProfileMenu} onMouseLeave={closeProfileMenu}>
                                 <button
                                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                                     className="flex items-center gap-1 text-sm text-slate-300 hover:text-neon-cyan focus:outline-none"
@@ -91,7 +102,12 @@ const Navbar = ({ isTestInProgress = false }) => {
                                     </svg>
                                 </button>
                                 {profileMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1" role="menu">
+                                    <div
+                                        className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1"
+                                        role="menu"
+                                        onMouseEnter={keepProfileMenuOpen}
+                                        onMouseLeave={closeProfileMenu}
+                                    >
                                         {isAdmin && (
                                             <Link
                                                 to="/admin"
